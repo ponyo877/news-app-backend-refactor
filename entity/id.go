@@ -1,17 +1,27 @@
-package entyty
+package entity
 
 import "github.com/google/uuid"
 
 // ID entity ID
-type ID = uuid.UUID
+type ID struct {
+	value uuid.UUID
+}
 
 // NewID create a new entity ID
 func NewID() ID {
-	return ID(uuid.New())
+	return ID{
+		value: uuid.New(),
+	}
 }
 
 // StringToID convert a string to an entity ID
 func StringToID(s string) (ID, error) {
 	id, err := uuid.Parse(s)
-	return ID(id), err
+	return ID{
+		value: id,
+	}, err
+}
+
+func (i ID) String() string {
+	return i.value.String()
 }
