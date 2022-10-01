@@ -19,6 +19,22 @@ type RedisConfig struct {
 	KVSDatabase int    `mapstructure:"KVS_DATABASE"`
 }
 
+type ElasticSearchConfig struct {
+	SEUser     string `mapstructure:"SE_USER"`
+	SEPassword string `mapstructure:"SE_PASSWORD"`
+	SESHost    string `mapstructure:"SE_HOST"`
+}
+
+type WebDAVConfig struct {
+	WDUser     string `mapstructure:"WD_USER"`
+	WDPassword string `mapstructure:"WD_PASSWORD"`
+	WDSHost    string `mapstructure:"WD_HOST"`
+}
+
+type AppConfig struct {
+	APRoot string `mapstructure:"AP_ROOT"`
+}
+
 func LoadMysqlConfig() (MysqlConfig, error) {
 	viper.AutomaticEnv()
 	viper.BindEnv("DB_USER")
@@ -45,4 +61,41 @@ func LoadRedisConfig() (RedisConfig, error) {
 	log.Infof("pass: %v, host: %v, db: %v", config.KVSPassword, config.KVSHost, config.KVSDatabase)
 	return config, nil
 
+}
+
+func LoadElasticSearchConfig() (ElasticSearchConfig, error) {
+	viper.AutomaticEnv()
+	viper.BindEnv("SE_USER")
+	viper.BindEnv("SE_PASSWORD")
+	viper.BindEnv("SE_HOST")
+	var config ElasticSearchConfig
+	if err := viper.Unmarshal(&config); err != nil {
+		return ElasticSearchConfig{}, err
+	}
+	log.Infof("user: %v, pass: %v, host: %v", config.SEUser, config.SEPassword, config.SESHost)
+	return config, nil
+}
+
+func LoadWebDAVConfig() (WebDAVConfig, error) {
+	viper.AutomaticEnv()
+	viper.BindEnv("WD_USER")
+	viper.BindEnv("WD_PASSWORD")
+	viper.BindEnv("WD_HOST")
+	var config WebDAVConfig
+	if err := viper.Unmarshal(&config); err != nil {
+		return WebDAVConfig{}, err
+	}
+	log.Infof("user: %v, pass: %v, host: %v", config.WDUser, config.WDPassword, config.WDSHost)
+	return config, nil
+}
+
+func LoadAppConfig() (AppConfig, error) {
+	viper.AutomaticEnv()
+	viper.BindEnv("AP_ROOT")
+	var config AppConfig
+	if err := viper.Unmarshal(&config); err != nil {
+		return AppConfig{}, err
+	}
+	log.Infof("root: %v", config.APRoot)
+	return config, nil
 }

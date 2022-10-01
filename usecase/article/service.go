@@ -1,7 +1,6 @@
 package article
 
 import (
-	"strings"
 	"time"
 
 	"github.com/ponyo877/news-app-backend-refactor/entity"
@@ -20,8 +19,14 @@ func NewService(r Repository) *Service {
 }
 
 // CreateArticle create a article
-func (s *Service) CreateArticle(article entity.Article) (entity.ID, time.Time, error) {
-	return s.repository.Create(article)
+func (s *Service) CreateArticle(article entity.Article) error {
+	if _, _, err := s.repository.Create(article); err != nil {
+		return err
+	}
+	if err := s.repository.CreateForSearch(article); err != nil {
+		return err
+	}
+	return nil
 }
 
 // GetArticle get a article
@@ -34,20 +39,24 @@ func (s *Service) GetArticle(id entity.ID) (entity.Article, error) {
 }
 
 // SearchArticles search article
-func (s *Service) SearchArticles(query string) ([]entity.Article, error) {
-	articles, err := s.repository.Search(strings.ToLower(query))
+func (s *Service) SearchArticles(keyword string) ([]entity.Article, error) {
+	IDList, err := s.repository.SearchOnlyID(keyword)
 	if err != nil {
 		return nil, err
 	}
-	if len(articles) == 0 {
+	if len(IDList) == 0 {
 		return nil, entity.ErrNotFound
+	}
+	articles, err := s.repository.List(IDList)
+	if err != nil {
+		return nil, err
 	}
 	return articles, nil
 }
 
 // ListArticles list article
 func (s *Service) ListArticles(baseCreatedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error) {
-	articles, err := s.repository.List(baseCreatedAt, invisibleIDSet)
+	articles, err := s.repository.ListOption(baseCreatedAt, invisibleIDSet)
 	if err != nil {
 		return nil, err
 	}
@@ -58,12 +67,16 @@ func (s *Service) ListArticles(baseCreatedAt time.Time, invisibleIDSet entity.ID
 }
 
 func (s *Service) ListPopularArticles(period string) ([]entity.Article, error) {
-	articles, err := s.repository.ListOrderByViewCount(period)
+	IDList, err := s.repository.ListOnlyIDOrderByViewCount(period)
 	if err != nil {
 		return nil, err
 	}
-	if len(articles) == 0 {
+	if len(IDList) == 0 {
 		return nil, entity.ErrNotFound
+	}
+	articles, err := s.repository.List(IDList)
+	if err != nil {
+		return nil, err
 	}
 	return articles, nil
 }

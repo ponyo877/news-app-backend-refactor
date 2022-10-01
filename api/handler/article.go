@@ -52,7 +52,7 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 		}
 		articles, err := service.ListArticles(baseCreatedAt, invisibleIDSet)
 		if err == entity.ErrNotFound {
-			return c.JSON(http.StatusOK, presenter.Responce{
+			return c.JSON(http.StatusOK, presenter.ArticleResponce{
 				Data: []*presenter.Article{},
 			})
 		}
@@ -60,13 +60,13 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 			log.Infof("サービスListArticlesが失敗しました: %v", err)
 			return c.JSON(http.StatusOK, nil)
 		}
-		articleForJson, err := presenter.PickArticleList(articles)
+		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
 			return c.JSON(http.StatusOK, nil)
 		}
-		responce := presenter.Responce{
-			Data: articleForJson,
+		responce := presenter.ArticleResponce{
+			Data: articleJson,
 		}
 		return c.JSON(http.StatusOK, responce)
 	}
@@ -78,7 +78,7 @@ func ListPopularArticles(service article.UseCase) echo.HandlerFunc {
 		period := c.Param("period")
 		articles, err := service.ListPopularArticles(period)
 		if err == entity.ErrNotFound {
-			return c.JSON(http.StatusOK, presenter.Responce{
+			return c.JSON(http.StatusOK, presenter.ArticleResponce{
 				Data: []*presenter.Article{},
 			})
 		}
@@ -86,13 +86,13 @@ func ListPopularArticles(service article.UseCase) echo.HandlerFunc {
 			log.Infof("サービスListPopularArticlesが失敗しました: %v", err)
 			return c.JSON(http.StatusOK, nil)
 		}
-		articleForJson, err := presenter.PickArticleList(articles)
+		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
 			return c.JSON(http.StatusOK, nil)
 		}
-		responce := presenter.Responce{
-			Data: articleForJson,
+		responce := presenter.ArticleResponce{
+			Data: articleJson,
 		}
 		return c.JSON(http.StatusOK, responce)
 	}
@@ -101,8 +101,19 @@ func ListPopularArticles(service article.UseCase) echo.HandlerFunc {
 // ListSearchedArticles
 func ListSearchedArticles(service article.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		responce := presenter.Responce{
-			Data: []*presenter.Article{},
+		keyword := c.QueryParam("keyword")
+		articles, err := service.SearchArticles(keyword)
+		if err != nil {
+			log.Infof("サービスSearchArticlesが失敗しました: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
+		articleJson, err := presenter.PickArticleList(articles)
+		if err != nil {
+			log.Infof("PickArticleListが失敗しました: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
+		responce := presenter.ArticleResponce{
+			Data: articleJson,
 		}
 		return c.JSON(http.StatusOK, responce)
 	}
@@ -121,16 +132,31 @@ func IncrementViewCount(service article.UseCase) echo.HandlerFunc {
 			log.Infof("サービスIncrementViewCountが失敗しました: %v", err)
 			return c.JSON(http.StatusOK, nil)
 		}
-		log.Info("サービスIncrementViewCountが成功しました")
 		return c.JSON(http.StatusOK, nil)
 	}
 }
 
-// ListRecommendArticle
+// ListRecommendArticle: のちに推薦サービスを別立てする, 現状は日別ランキングを出力
 func ListRecommendArticle(service article.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		responce := presenter.Responce{
-			Data: []*presenter.Article{},
+		_ = c.Param("ids")
+		articles, err := service.ListPopularArticles("daily")
+		if err == entity.ErrNotFound {
+			return c.JSON(http.StatusOK, presenter.ArticleResponce{
+				Data: []*presenter.Article{},
+			})
+		}
+		if err != nil {
+			log.Infof("サービスListPopularArticlesが失敗しました: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
+		articleJson, err := presenter.PickArticleList(articles)
+		if err != nil {
+			log.Infof("PickArticleListが失敗しました: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
+		responce := presenter.ArticleResponce{
+			Data: articleJson,
 		}
 		return c.JSON(http.StatusOK, responce)
 	}

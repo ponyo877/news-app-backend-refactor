@@ -44,7 +44,7 @@ func (s *Service) StockLatestArticle() error {
 		}
 	}
 	for _, article := range newArticleSet.Set {
-		if _, _, err := s.articleService.CreateArticle(article); err != nil {
+		if err := s.articleService.CreateArticle(article); err != nil {
 			log.Infof("サービスCreateArticleに失敗しました: %v", err)
 			return err
 		}

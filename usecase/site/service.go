@@ -17,8 +17,8 @@ func NewService(r Repository) *Service {
 }
 
 // CreateSite create a article
-func (s *Service) CreateSite(title string, RSSURL string) (entity.ID, error) {
-	site, err := entity.NewSite(title, RSSURL)
+func (s *Service) CreateSite(title string, RSSURL string, ImageURL string) (entity.ID, error) {
+	site, err := entity.NewSite(title, RSSURL, ImageURL)
 	if err != nil {
 		return entity.NewID(), err
 	}
@@ -38,7 +38,7 @@ func (s *Service) GetSite(id entity.ID) (*entity.Site, error) {
 }
 
 // ListSite list article
-func (s *Service) ListSite() ([]*entity.Site, error) {
+func (s *Service) ListSite() ([]entity.Site, error) {
 	sites, err := s.repo.List()
 	if err != nil {
 		return nil, err

@@ -6,19 +6,7 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 )
 
-// Article data
-// Todo: jsonのパラメータ名の形式がキャメルか調べる
-// {
-// 	"image":       getImageFromFeedMongo(item.Content), *
-// 	"publishedAt": item.Published, *
-// 	"sitetitle":   siteTitle, *
-// 	"siteID":      siteID, *
-// 	"titles":      item.Title, *
-// 	"url":         item.Link, *
-// 	"acquired":    false, x
-// 	"elastic":     false, x
-// }
-type Responce struct {
+type ArticleResponce struct {
 	Data []*Article `json:"data"`
 }
 

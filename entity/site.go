@@ -6,15 +6,17 @@ type Site struct {
 	ID            ID
 	Title         string
 	RSSURL        string
+	ImageURL      string
 	LastUpdatedAt time.Time
 }
 
 // NewSite create a new site
-func NewSite(title, RSSURL string) (*Site, error) {
+func NewSite(title, RSSURL, ImageURL string) (*Site, error) {
 	site := &Site{
 		ID:            NewID(),
 		Title:         title,
 		RSSURL:        RSSURL,
+		ImageURL:      ImageURL,
 		LastUpdatedAt: time.Time{},
 	}
 

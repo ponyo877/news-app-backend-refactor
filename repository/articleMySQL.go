@@ -93,11 +93,7 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 	return article, nil
 }
 
-func (r *ArticleRepository) Search(query string) ([]entity.Article, error) {
-	return nil, nil
-}
-
-func (r *ArticleRepository) List(basePublishedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error) {
+func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error) {
 	var siteArticleRepositoryPresenterList SiteArticleRepositoryPresenterList
 	if err := r.db.
 		Model(&ArticleRepositoryPresenter{}).
@@ -149,13 +145,8 @@ func (r *ArticleRepository) DeleteByID(id entity.ID) error {
 	return nil
 }
 
-func (r *ArticleRepository) ListOrderByViewCount(period string) ([]entity.Article, error) {
+func (r *ArticleRepository) List(IDList []entity.ID) ([]entity.Article, error) {
 	var articleList []entity.Article
-	IDList, err := r.ListOnlyIDOrderByViewCount(period)
-	if err != nil {
-		log.Infof("ListOnlyIDOrderByViewCountが失敗しました: %v", err)
-		return nil, err
-	}
 	for _, ID := range IDList {
 		article, err := r.Get(ID)
 		if err != nil {

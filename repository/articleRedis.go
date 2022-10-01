@@ -9,13 +9,9 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 )
 
-// ArticleRedis mysql repository
+// ArticleRedis redis repository
 type ArticleRedis struct {
 	kvs *redis.Client
-}
-
-type Member struct {
-	ID string `json:"id"`
 }
 
 type ArticleRedisPresenter struct {

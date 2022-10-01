@@ -17,6 +17,7 @@ type SiteMySQLPresenter struct {
 	ID            string    `gorm:"column:id;primary_key"`
 	Title         string    `gorm:"column:title"`
 	RSSURL        string    `gorm:"column:rss_url"`
+	ImageURL      string    `gorm:"column:image_url"`
 	LastUpdatedAt time.Time `gorm:"column:last_updated_at"`
 	UpdatedAt     time.Time `gorm:"column:updated_at"`
 	CreatedA      time.Time `gorm:"column:created_at"`
@@ -41,22 +42,23 @@ func (r *SiteMySQL) Search(query string) ([]*entity.Site, error) {
 	return nil, nil
 }
 
-func (r *SiteMySQL) List() ([]*entity.Site, error) {
+func (r *SiteMySQL) List() ([]entity.Site, error) {
 	var siteMySQLList []SiteMySQLPresenter
 	if err := r.db.Find(&siteMySQLList).Error; err != nil {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
 	}
-	var siteList []*entity.Site
+	var siteList []entity.Site
 	for _, siteMySQL := range siteMySQLList {
 		id, err := entity.StringToID(siteMySQL.ID)
 		if err != nil {
 			return nil, err
 		}
-		site := &entity.Site{
+		site := entity.Site{
 			ID:            id,
 			Title:         siteMySQL.Title,
 			RSSURL:        siteMySQL.RSSURL,
+			ImageURL:      siteMySQL.ImageURL,
 			LastUpdatedAt: siteMySQL.LastUpdatedAt,
 		}
 		siteList = append(siteList, site)

@@ -16,9 +16,9 @@ func NewID() ID {
 
 // StringToID convert a string to an entity ID
 func StringToID(s string) (ID, error) {
-	id, err := uuid.Parse(s)
+	UUID, err := uuid.Parse(s)
 	return ID{
-		value: id,
+		value: UUID,
 	}, err
 }
 

@@ -8,7 +8,7 @@ import (
 type Reader interface {
 	Get(id entity.ID) (*entity.Site, error)
 	Search(query string) ([]*entity.Site, error)
-	List() ([]*entity.Site, error)
+	List() ([]entity.Site, error)
 }
 
 // Writer interface
@@ -26,8 +26,8 @@ type Repository interface {
 
 // UseCase interface
 type UseCase interface {
-	CreateSite(title string, RSSURL string) (entity.ID, error)
+	CreateSite(title string, RSSURL string, ImageURL string) (entity.ID, error)
 	GetSite(id entity.ID) (*entity.Site, error)
-	ListSite() ([]*entity.Site, error)
+	ListSite() ([]entity.Site, error)
 	UpdateSite(e *entity.Site) error
 }

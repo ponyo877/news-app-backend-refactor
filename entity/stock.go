@@ -7,12 +7,12 @@ import (
 
 type Stock struct {
 	ArticleSet ArticleSet
-	SiteList   []*Site
+	SiteList   []Site
 	feedParser *gofeed.Parser
 }
 
 // NewStock create a new entity Stock
-func NewStock(siteList []*Site) Stock {
+func NewStock(siteList []Site) Stock {
 	return Stock{
 		ArticleSet: NewArticleSet(),
 		SiteList:   siteList,
@@ -49,7 +49,7 @@ func (s Stock) StockLatestArticle() ([]Site, ArticleSet, error) {
 				log.Infof("ContentToImangeURLに失敗しました :%v", err)
 				return nil, NewArticleSet(), err
 			}
-			newArticle, err := NewArticle(item.Title, item.Link, imageURL, *site, publishedAt)
+			newArticle, err := NewArticle(item.Title, item.Link, imageURL, site, publishedAt)
 			if err != nil {
 				log.Infof("NewArticleに失敗しました :%v", err)
 				return nil, NewArticleSet(), err

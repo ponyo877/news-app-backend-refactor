@@ -1,8 +1,6 @@
 package comment
 
 import (
-	"time"
-
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 )
 
@@ -10,7 +8,7 @@ import (
 type Reader interface {
 	Get(id entity.ID) (*entity.Comment, error)
 	Search(query string) ([]*entity.Comment, error)
-	List() ([]*entity.Comment, error)
+	List(articleID entity.ID) ([]entity.Comment, error)
 }
 
 // Writer interface
@@ -28,10 +26,10 @@ type Repository interface {
 
 // UseCase interface
 type UseCase interface {
-	CreateComment(message string, site entity.Site) (entity.ID, error)
+	CreateComment(entity.Comment) (entity.ID, error)
 	GetComment(id entity.ID) (*entity.Comment, error)
 	SearchComments(query string) ([]*entity.Comment, error)
-	ListComments(baseCreatedAt time.Time, invisibleIDSet entity.IDSet) ([]*entity.Comment, error)
+	ListComments(articleID entity.ID) ([]entity.Comment, error)
 	DeleteComment(id entity.ID) error
-	UpdateComment(e *entity.Comment) error
+	UpdateComment(e entity.Comment) error
 }
