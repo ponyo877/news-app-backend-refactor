@@ -22,6 +22,7 @@ func StringToID(s string) (ID, error) {
 	}, err
 }
 
+// String
 func (i ID) String() string {
 	return i.value.String()
 }

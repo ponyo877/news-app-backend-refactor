@@ -6,8 +6,8 @@ import (
 
 // Reader interface
 type Reader interface {
-	Get(id entity.ID) (*entity.Comment, error)
-	Search(query string) ([]*entity.Comment, error)
+	Get(id entity.ID) (entity.Comment, error)
+	Search(query string) ([]entity.Comment, error)
 	List(articleID entity.ID) ([]entity.Comment, error)
 }
 
@@ -27,8 +27,8 @@ type Repository interface {
 // UseCase interface
 type UseCase interface {
 	CreateComment(entity.Comment) (entity.ID, error)
-	GetComment(id entity.ID) (*entity.Comment, error)
-	SearchComments(query string) ([]*entity.Comment, error)
+	GetComment(id entity.ID) (entity.Comment, error)
+	SearchComments(query string) ([]entity.Comment, error)
 	ListComments(articleID entity.ID) ([]entity.Comment, error)
 	DeleteComment(id entity.ID) error
 	UpdateComment(e entity.Comment) error

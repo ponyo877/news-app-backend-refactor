@@ -8,6 +8,7 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/usecase/stock"
 )
 
+// MakeStockHandlers
 func MakeStockHandlers(e *echo.Echo, service stock.UseCase) {
 	e.GET("/v1/stock", StockLatestArticle(service)) // 全サイトの情報を得る
 }

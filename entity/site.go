@@ -11,25 +11,26 @@ type Site struct {
 }
 
 // NewSite create a new site
-func NewSite(title, RSSURL, ImageURL string) (*Site, error) {
-	site := &Site{
+func NewSite(title, RSSURL, ImageURL string) (Site, error) {
+	site := Site{
 		ID:            NewID(),
 		Title:         title,
 		RSSURL:        RSSURL,
 		ImageURL:      ImageURL,
 		LastUpdatedAt: time.Time{},
 	}
-
 	if err := site.Validate(); err != nil {
-		return nil, ErrInvalidEntity
+		return Site{}, ErrInvalidEntity
 	}
 	return site, nil
 }
 
+// IsNewerLastUpdatedAt
 func (s Site) IsNewerLastUpdatedAt(lastUpdatedAt time.Time) bool {
 	return s.LastUpdatedAt.After(lastUpdatedAt) || s.LastUpdatedAt.Equal(lastUpdatedAt)
 }
 
+// UpdateLastUpdatedAt
 func (s Site) UpdateLastUpdatedAt(lastUpdatedAt time.Time) Site {
 	s.LastUpdatedAt = lastUpdatedAt
 	return s

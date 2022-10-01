@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/olivere/elastic/v7"
@@ -78,10 +77,6 @@ func main() {
 		webdavConfig.WDUser,
 		webdavConfig.WDPassword,
 	)
-	// ReadDir("/homes/scott/tmp")
-	// if err := webdav.Mkdir("static", 0644); err != nil {
-	// 	log.Panicf("staticディレクトリの作成に失敗しました: %v", err)
-	// }
 
 	articlRepository := repository.NewArticleRepository(gormDB, rdb, es)
 	articleService := article.NewService(articlRepository)
@@ -95,10 +90,8 @@ func main() {
 	userService := user.NewService(userRepository, fileioService)
 	commentService := comment.NewService(commentRepository, userService)
 
-	// Echo instance
 	e := echo.New()
 
-	// Middleware
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
@@ -109,11 +102,5 @@ func main() {
 	handler.MakeImageHandlers(e, fileioService)
 	handler.MakeCommentHandlers(e, commentService)
 
-	// Start server
 	e.Logger.Fatal(e.Start(":80"))
-}
-
-// Handler
-func hello(c echo.Context) error {
-	return c.String(http.StatusOK, "Hello, World!")
 }

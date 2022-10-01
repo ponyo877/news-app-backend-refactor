@@ -32,6 +32,9 @@ func (s *Service) CreateArticle(article entity.Article) error {
 // GetArticle get a article
 func (s *Service) GetArticle(id entity.ID) (entity.Article, error) {
 	article, err := s.repository.Get(id)
+	if err == entity.ErrNotFound {
+		return entity.Article{}, nil
+	}
 	if err != nil {
 		return entity.Article{}, err
 	}
@@ -45,7 +48,7 @@ func (s *Service) SearchArticles(keyword string) ([]entity.Article, error) {
 		return nil, err
 	}
 	if len(IDList) == 0 {
-		return nil, entity.ErrNotFound
+		return []entity.Article{}, nil
 	}
 	articles, err := s.repository.List(IDList)
 	if err != nil {
@@ -60,19 +63,17 @@ func (s *Service) ListArticles(baseCreatedAt time.Time, invisibleIDSet entity.ID
 	if err != nil {
 		return nil, err
 	}
-	if len(articles) == 0 {
-		return nil, entity.ErrNotFound
-	}
 	return articles, nil
 }
 
+// ListPopularArticles
 func (s *Service) ListPopularArticles(period string) ([]entity.Article, error) {
 	IDList, err := s.repository.ListOnlyIDOrderByViewCount(period)
 	if err != nil {
 		return nil, err
 	}
 	if len(IDList) == 0 {
-		return nil, entity.ErrNotFound
+		return []entity.Article{}, nil
 	}
 	articles, err := s.repository.List(IDList)
 	if err != nil {
@@ -81,6 +82,7 @@ func (s *Service) ListPopularArticles(period string) ([]entity.Article, error) {
 	return articles, nil
 }
 
+// IncrementViewCount
 func (s *Service) IncrementViewCount(id entity.ID) error {
 	if err := s.repository.IncrementViewCount(id); err != nil {
 		return err

@@ -20,6 +20,7 @@ type Site struct {
 
 type SiteList []*Site
 
+// pickSite
 func pickSite(site entity.Site) (Site, error) {
 	sitePresenter := Site{
 		ID:            site.ID.String(),
@@ -31,6 +32,7 @@ func pickSite(site entity.Site) (Site, error) {
 	return sitePresenter, nil
 }
 
+// PickSiteList
 func PickSiteList(siteList []entity.Site) (SiteList, error) {
 	var sitePresenterList SiteList
 	for _, article := range siteList {

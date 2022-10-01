@@ -35,6 +35,7 @@ type AppConfig struct {
 	APRoot string `mapstructure:"AP_ROOT"`
 }
 
+// LoadMysqlConfig
 func LoadMysqlConfig() (MysqlConfig, error) {
 	viper.AutomaticEnv()
 	viper.BindEnv("DB_USER")
@@ -49,6 +50,7 @@ func LoadMysqlConfig() (MysqlConfig, error) {
 	return config, nil
 }
 
+// LoadRedisConfig
 func LoadRedisConfig() (RedisConfig, error) {
 	viper.AutomaticEnv()
 	viper.BindEnv("KVS_PASSWORD")
@@ -63,6 +65,7 @@ func LoadRedisConfig() (RedisConfig, error) {
 
 }
 
+// LoadElasticSearchConfig
 func LoadElasticSearchConfig() (ElasticSearchConfig, error) {
 	viper.AutomaticEnv()
 	viper.BindEnv("SE_USER")
@@ -76,6 +79,7 @@ func LoadElasticSearchConfig() (ElasticSearchConfig, error) {
 	return config, nil
 }
 
+// LoadWebDAVConfig
 func LoadWebDAVConfig() (WebDAVConfig, error) {
 	viper.AutomaticEnv()
 	viper.BindEnv("WD_USER")
@@ -89,6 +93,7 @@ func LoadWebDAVConfig() (WebDAVConfig, error) {
 	return config, nil
 }
 
+// LoadAppConfig
 func LoadAppConfig() (AppConfig, error) {
 	viper.AutomaticEnv()
 	viper.BindEnv("AP_ROOT")

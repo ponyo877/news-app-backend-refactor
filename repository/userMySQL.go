@@ -22,6 +22,7 @@ type UserMySQLPresenter struct {
 	CreatedAt  time.Time `gorm:"column:created_at"`
 }
 
+// TableName
 func (s UserMySQLPresenter) TableName() string {
 	return "users"
 }
@@ -33,17 +34,21 @@ func NewUserMySQL(db *gorm.DB) *UserMySQL {
 	}
 }
 
-func (r *UserMySQL) Get(id entity.ID) (*entity.User, error) {
-	return nil, nil
+// Get
+func (r *UserMySQL) Get(id entity.ID) (entity.User, error) {
+	return entity.User{}, nil
 }
 
+// GetOption
 func (r *UserMySQL) GetOption(deviceHash string) (entity.User, error) {
 	var userMySQLPresenter UserMySQLPresenter
 	if err := r.db.
 		Where("device_hash = ?", deviceHash).
 		Find(&userMySQLPresenter).
-		Error; err != nil {
+		Error; err != nil && err != gorm.ErrRecordNotFound {
 		return entity.User{}, err
+	} else if err == gorm.ErrRecordNotFound {
+		return entity.User{}, entity.ErrNotFound
 	}
 	ID, err := entity.StringToID(userMySQLPresenter.ID)
 	if err != nil {
@@ -59,15 +64,19 @@ func (r *UserMySQL) GetOption(deviceHash string) (entity.User, error) {
 	}, nil
 }
 
-func (r *UserMySQL) Search(query string) ([]*entity.User, error) {
+// Search
+func (r *UserMySQL) Search(query string) ([]entity.User, error) {
 	return nil, nil
 }
 
+// List
 func (r *UserMySQL) List() ([]entity.User, error) {
 	var userMySQLList []UserMySQLPresenter
-	if err := r.db.Find(&userMySQLList).Error; err != nil {
+	if err := r.db.Find(&userMySQLList).Error; err != nil && err != gorm.ErrRecordNotFound {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
+	} else if err == gorm.ErrRecordNotFound {
+		return []entity.User{}, nil
 	}
 	var userList []entity.User
 	for _, userMySQL := range userMySQLList {
@@ -88,6 +97,7 @@ func (r *UserMySQL) List() ([]entity.User, error) {
 	return userList, nil
 }
 
+// Create
 func (r *UserMySQL) Create(e entity.User) (entity.ID, error) {
 	userMySQLPresenter := UserMySQLPresenter{
 		ID:         e.ID.String(),
@@ -103,10 +113,12 @@ func (r *UserMySQL) Create(e entity.User) (entity.ID, error) {
 	return e.ID, nil
 }
 
+// Update
 func (r *UserMySQL) Update(e entity.User) error {
 	return nil
 }
 
+// Delete
 func (r *UserMySQL) Delete(id entity.ID) error {
 	return nil
 }

@@ -34,26 +34,22 @@ func (s *Service) CreateComment(commnet entity.Comment) (entity.ID, error) {
 }
 
 // GetComment get a Comment
-func (s *Service) GetComment(id entity.ID) (*entity.Comment, error) {
+func (s *Service) GetComment(id entity.ID) (entity.Comment, error) {
 	comments, err := s.repository.Get(id)
-	if comments == nil {
-		return nil, entity.ErrNotFound
+	if err == entity.ErrNotFound {
+		return comments, nil
 	}
 	if err != nil {
-		return nil, err
+		return entity.Comment{}, err
 	}
-
 	return comments, nil
 }
 
 // SearchComments search Comment
-func (s *Service) SearchComments(query string) ([]*entity.Comment, error) {
+func (s *Service) SearchComments(query string) ([]entity.Comment, error) {
 	comments, err := s.repository.Search(strings.ToLower(query))
 	if err != nil {
 		return nil, err
-	}
-	if len(comments) == 0 {
-		return nil, entity.ErrNotFound
 	}
 	return comments, nil
 }
@@ -63,9 +59,6 @@ func (s *Service) ListComments(articleID entity.ID) ([]entity.Comment, error) {
 	comments, err := s.repository.List(articleID)
 	if err != nil {
 		return nil, err
-	}
-	if len(comments) == 0 {
-		return nil, entity.ErrNotFound
 	}
 	return comments, nil
 }

@@ -36,7 +36,7 @@ func SaveImage(service fileio.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		file, err := c.FormFile("file")
 		if err != nil {
-			log.Infof("パラメータimageの形式が間違っています: %v", err)
+			log.Infof("パラメータfileの形式が間違っています: %v", err)
 			return c.JSON(http.StatusOK, nil)
 		}
 		imageFile, err := file.Open()
@@ -45,6 +45,10 @@ func SaveImage(service fileio.UseCase) echo.HandlerFunc {
 			return c.JSON(http.StatusOK, nil)
 		}
 		imageByte, err := ioutil.ReadAll(imageFile)
+		if err != nil {
+			log.Infof("パラメータfileの形式が間違っています: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
 		image := entity.Image{
 			File: imageByte,
 			Name: file.Filename,

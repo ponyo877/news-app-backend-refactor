@@ -17,6 +17,7 @@ func NewImage() ID {
 	}
 }
 
+// FileName
 func (i Image) FileName() string {
 	return i.Name
 }

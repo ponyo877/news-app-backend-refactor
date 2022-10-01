@@ -11,6 +11,7 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/usecase/comment"
 )
 
+// MakeCommentHandlers
 func MakeCommentHandlers(e *echo.Echo, service comment.UseCase) {
 	e.GET("/v1/comment/:article_id", ListComment(service))    // articleID
 	e.POST("/v1/comment/:article_id", CreateComment(service)) // articleID, massage, devicehash

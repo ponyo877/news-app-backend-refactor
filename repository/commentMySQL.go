@@ -24,6 +24,7 @@ type CommentMySQLPresenter struct {
 	CreatedAt  time.Time `gorm:"column:created_at"`
 }
 
+// TableName
 func (s CommentMySQLPresenter) TableName() string {
 	return "comments"
 }
@@ -35,19 +36,25 @@ func NewCommentMySQL(db *gorm.DB) *CommentMySQL {
 	}
 }
 
-func (r *CommentMySQL) Get(id entity.ID) (*entity.Comment, error) {
-	return nil, nil
+// Get
+func (r *CommentMySQL) Get(id entity.ID) (entity.Comment, error) {
+	return entity.Comment{}, nil
 }
 
-func (r *CommentMySQL) Search(query string) ([]*entity.Comment, error) {
-	return nil, nil
+// Search
+func (r *CommentMySQL) Search(query string) ([]entity.Comment, error) {
+	return []entity.Comment{}, nil
 }
 
+// List
 func (r *CommentMySQL) List(articleID entity.ID) ([]entity.Comment, error) {
 	var commentMySQLList []CommentMySQLPresenter
-	if err := r.db.Where("article_id = ?", articleID.String()).Find(&commentMySQLList).Error; err != nil {
+	err := r.db.Where("article_id = ?", articleID.String()).Find(&commentMySQLList).Error
+	if err != nil && err != gorm.ErrRecordNotFound {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
+	} else if err == gorm.ErrRecordNotFound {
+		return []entity.Comment{}, nil
 	}
 	var commentList []entity.Comment
 	for _, commentMySQL := range commentMySQLList {
@@ -76,6 +83,7 @@ func (r *CommentMySQL) List(articleID entity.ID) ([]entity.Comment, error) {
 	return commentList, nil
 }
 
+// Create
 func (r *CommentMySQL) Create(e entity.Comment) (entity.ID, error) {
 	commentMySQLPresenter := CommentMySQLPresenter{
 		ID:         e.ID.String(),
@@ -93,10 +101,12 @@ func (r *CommentMySQL) Create(e entity.Comment) (entity.ID, error) {
 	return e.ID, nil
 }
 
+// Update
 func (r *CommentMySQL) Update(e entity.Comment) error {
 	return nil
 }
 
+// Delete
 func (r *CommentMySQL) Delete(id entity.ID) error {
 	return nil
 }

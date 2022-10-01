@@ -38,7 +38,7 @@ func (s *Service) StockLatestArticle() error {
 		return err
 	}
 	for _, site := range newSiteList {
-		if err := s.siteService.UpdateSite(&site); err != nil {
+		if err := s.siteService.UpdateSite(site); err != nil {
 			log.Infof("サービスUpdateSiteに失敗しました: %v", err)
 			return err
 		}

@@ -29,6 +29,7 @@ func NewArticleRedis(kvs *redis.Client) *ArticleRedis {
 	}
 }
 
+// IncrementViewCount
 func (r *ArticleRepository) IncrementViewCount(ID entity.ID) error {
 	periodList := []string{"monthly", "weekly", "daily"}
 	for _, period := range periodList {
@@ -43,40 +44,33 @@ func (r *ArticleRepository) IncrementViewCount(ID entity.ID) error {
 	return nil
 }
 
+// ListOnlyIDOrderByViewCount
 func (r *ArticleRepository) ListOnlyIDOrderByViewCount(period string) ([]entity.ID, error) {
-	// var articleRedisPresenterList ArticleRedisPresenterList
 	var idList []entity.ID
 	zSetKey, err := getCurrentZSetKey(period)
 	if err != nil {
 		return nil, err
 	}
 	serializedMembersWithScores, err := r.kvs.ZRevRangeWithScores(context.Background(), zSetKey, 0, 14).Result()
-	// member := &Member{}
 	for _, serializedMemberWithScore := range serializedMembersWithScores {
 		serializedMember := serializedMemberWithScore.Member
-		// score := serializedMemberWithScore.Score
-		// if err := json.Unmarshal([]byte(serializedMember.(string)), member); err != nil {
-		// 	return nil, err
-		// }
-		ID, ok := serializedMember.(string)
+		IDString, ok := serializedMember.(string)
 		if !ok {
 			return nil, err
 		}
-		id, err := entity.StringToID(ID)
+		ID, err := entity.StringToID(IDString)
 		if err != nil {
 			return nil, err
 		}
-		idList = append(idList, id)
-		// articleRedisPresenter := ArticleRedisPresenter{
-		// 	ID:        member.ID,
-		// 	ViewCount: int(score),
-		// 	Rank:      idx + 1,
-		// }
-		// articleRedisPresenterList = append(articleRedisPresenterList, articleRedisPresenter)
+		idList = append(idList, ID)
+	}
+	if len(idList) == 0 {
+		return nil, entity.ErrNotFound
 	}
 	return idList, nil
 }
 
+// getCurrentZSetKey
 func getCurrentZSetKey(period string) (string, error) {
 	periodToZSetKey := map[string]string{}
 	now := time.Now()

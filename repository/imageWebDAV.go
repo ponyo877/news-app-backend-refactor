@@ -23,6 +23,7 @@ func NewImageWebDAV(wd *gowebdav.Client) *ImageWebDAV {
 	}
 }
 
+// Download
 func (r *ImageWebDAV) Download(filename string) (entity.Image, error) {
 	filePath := filepath.Join(r.dir, filename)
 	reader, err := r.wd.ReadStream(filePath)
@@ -37,6 +38,7 @@ func (r *ImageWebDAV) Download(filename string) (entity.Image, error) {
 	}, nil
 }
 
+// Upload
 func (r *ImageWebDAV) Upload(e entity.Image) (string, error) {
 	file := bytes.NewReader(e.File)
 	filePath := filepath.Join(r.dir, e.FileName())

@@ -36,21 +36,23 @@ func (s *Service) CreateUser(name string, avatarImage entity.Image, deviceHash s
 }
 
 // GetUser get a User
-func (s *Service) GetUser(ID entity.ID) (*entity.User, error) {
+func (s *Service) GetUser(ID entity.ID) (entity.User, error) {
 	user, err := s.repository.Get(ID)
-	if user == nil {
-		return nil, entity.ErrNotFound
+	if err == entity.ErrNotFound {
+		return entity.User{}, nil
 	}
 	if err != nil {
-		return nil, err
+		return entity.User{}, err
 	}
-
 	return user, nil
 }
 
 // GetUser get a User
 func (s *Service) GetUserOption(deviceHash string) (entity.User, error) {
 	user, err := s.repository.GetOption(deviceHash)
+	if err == entity.ErrNotFound {
+		return entity.User{}, nil
+	}
 	if err != nil {
 		return entity.User{}, err
 	}
@@ -58,13 +60,10 @@ func (s *Service) GetUserOption(deviceHash string) (entity.User, error) {
 }
 
 // SearchUsers search User
-func (s *Service) SearchUsers(query string) ([]*entity.User, error) {
+func (s *Service) SearchUsers(query string) ([]entity.User, error) {
 	user, err := s.repository.Search(strings.ToLower(query))
 	if err != nil {
 		return nil, err
-	}
-	if len(user) == 0 {
-		return nil, entity.ErrNotFound
 	}
 	return user, nil
 }
@@ -74,9 +73,6 @@ func (s *Service) ListUsers() ([]entity.User, error) {
 	user, err := s.repository.List()
 	if err != nil {
 		return nil, err
-	}
-	if len(user) == 0 {
-		return nil, entity.ErrNotFound
 	}
 	return user, nil
 }

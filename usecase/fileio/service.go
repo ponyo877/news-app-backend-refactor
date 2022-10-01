@@ -21,6 +21,7 @@ func NewService(r Repository, root string) *Service {
 	}
 }
 
+// SaveImage
 func (s *Service) SaveImage(e entity.Image) (string, error) {
 	filePath, err := s.repo.Upload(e)
 	if err != nil {
@@ -34,6 +35,7 @@ func (s *Service) SaveImage(e entity.Image) (string, error) {
 	return URL.String(), nil
 }
 
+// FetchImage
 func (s *Service) FetchImage(name string) (entity.Image, error) {
 	image, err := s.repo.Download(name)
 	if err != nil {

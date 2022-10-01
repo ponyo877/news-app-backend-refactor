@@ -10,6 +10,7 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/usecase/site"
 )
 
+// MakeSiteHandlers
 func MakeSiteHandlers(e *echo.Echo, service site.UseCase) {
 	e.GET("/v1/site", ListSite(service)) // 全サイトの情報を得る
 }

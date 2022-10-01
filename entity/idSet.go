@@ -18,7 +18,6 @@ func NewIDSet() IDSet {
 }
 
 // Add
-// TODO: ポインタで返すか実体で返すかをstockの成功例から判断し横展開までする
 func (i *IDSet) Add(id ID) IDSet {
 	i.Set.Add(id)
 	return *i

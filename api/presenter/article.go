@@ -22,6 +22,7 @@ type Article struct {
 
 type ArticleList []*Article
 
+// pickArticle
 func pickArticle(article entity.Article) (Article, error) {
 	imageURL, err := article.ImageURL.URL()
 	if err != nil {
@@ -39,6 +40,7 @@ func pickArticle(article entity.Article) (Article, error) {
 	return articlePresenter, nil
 }
 
+// PickArticleList
 func PickArticleList(articleList []entity.Article) (ArticleList, error) {
 	var articlePresenterList ArticleList
 	for _, article := range articleList {

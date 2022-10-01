@@ -37,6 +37,9 @@ func (r *ArticleRepository) SearchOnlyID(keyword string) ([]entity.ID, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(searchResult.Hits.Hits) == 0 {
+		return []entity.ID{}, nil
+	}
 	for _, hit := range searchResult.Hits.Hits {
 		var articleElasticSearchPresenter ArticleElasticSearchPresenter
 		hitSourceByte, err := hit.Source.MarshalJSON()
@@ -55,6 +58,7 @@ func (r *ArticleRepository) SearchOnlyID(keyword string) ([]entity.ID, error) {
 	return idList, nil
 }
 
+// CreateForSearch
 func (r *ArticleRepository) CreateForSearch(e entity.Article) error {
 	jsonString, err := toJsonString(e)
 	if err != nil {
@@ -70,6 +74,7 @@ func (r *ArticleRepository) CreateForSearch(e entity.Article) error {
 	return nil
 }
 
+// toJsonString
 func toJsonString(e entity.Article) (string, error) {
 	articleElasticSearchPresenter := &ArticleElasticSearchPresenter{
 		ID:    e.ID.String(),

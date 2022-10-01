@@ -5,6 +5,7 @@ import (
 
 	"github.com/labstack/gommon/log"
 	"github.com/ponyo877/news-app-backend-refactor/entity"
+	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
 
@@ -30,6 +31,7 @@ func (a ArticleRepositoryPresenter) TableName() string {
 	return "articles"
 }
 
+// pickArticle
 func (p *SiteArticleRepositoryPresenter) pickArticle() (entity.Article, error) {
 	siteID, err := entity.StringToID(p.SiteMySQLPresenter.ID)
 	if err != nil {
@@ -63,6 +65,7 @@ func (p *SiteArticleRepositoryPresenter) pickArticle() (entity.Article, error) {
 	return article, nil
 }
 
+// pickArticleList
 func (s *SiteArticleRepositoryPresenterList) pickArticleList() ([]entity.Article, error) {
 	var articleList []entity.Article
 	for _, siteArticleRepositoryPresenter := range *s {
@@ -75,6 +78,7 @@ func (s *SiteArticleRepositoryPresenterList) pickArticleList() ([]entity.Article
 	return articleList, nil
 }
 
+// Get
 func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 	var siteArticleRepositoryPresenter SiteArticleRepositoryPresenter
 	if err := r.db.
@@ -86,6 +90,9 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 	}
 	article, err := siteArticleRepositoryPresenter.pickArticle()
+	if err == gorm.ErrRecordNotFound {
+		return entity.Article{}, entity.ErrNotFound
+	}
 	if err != nil {
 		log.Infof("pickArticleに失敗しました: %v", err)
 		return entity.Article{}, err
@@ -93,6 +100,7 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 	return article, nil
 }
 
+// ListOption
 func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error) {
 	var siteArticleRepositoryPresenterList SiteArticleRepositoryPresenterList
 	if err := r.db.
@@ -101,9 +109,11 @@ func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet
 		Joins("LEFT JOIN sites on sites.id = articles.site_id").
 		Where("sites.id NOT IN ?", invisibleIDSet.Strings()).
 		Where("articles.published_at < ?", basePublishedAt).
-		Find(&siteArticleRepositoryPresenterList).Error; err != nil {
+		Find(&siteArticleRepositoryPresenterList).Error; err != nil && err != gorm.ErrRecordNotFound {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
+	} else if err == gorm.ErrRecordNotFound {
+		return []entity.Article{}, nil
 	}
 	articleList, err := siteArticleRepositoryPresenterList.pickArticleList()
 	if err != nil {
@@ -113,6 +123,7 @@ func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet
 	return articleList, nil
 }
 
+// Create
 func (r *ArticleRepository) Create(e entity.Article) (entity.ID, time.Time, error) {
 	imageURL, err := e.ImageURL.URL()
 	if err != nil {
@@ -137,23 +148,31 @@ func (r *ArticleRepository) Create(e entity.Article) (entity.ID, time.Time, erro
 	return e.ID, e.CreatedAt, nil
 }
 
+// Update
 func (r *ArticleRepository) Update(e entity.Article) error {
 	return nil
 }
 
+// DeleteByID
 func (r *ArticleRepository) DeleteByID(id entity.ID) error {
 	return nil
 }
 
+// List
 func (r *ArticleRepository) List(IDList []entity.ID) ([]entity.Article, error) {
 	var articleList []entity.Article
 	for _, ID := range IDList {
 		article, err := r.Get(ID)
-		if err != nil {
+		if err != nil && err != gorm.ErrRecordNotFound {
 			log.Infof("Getが失敗しました: %v", err)
 			return nil, err
+		} else if err == gorm.ErrRecordNotFound {
+			continue
 		}
 		articleList = append(articleList, article)
+	}
+	if len(articleList) == 0 {
+		return []entity.Article{}, nil
 	}
 	return articleList, nil
 }

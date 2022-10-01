@@ -26,15 +26,15 @@ func (s *Service) CreateSite(title string, RSSURL string, ImageURL string) (enti
 }
 
 // GetSite get a article
-func (s *Service) GetSite(id entity.ID) (*entity.Site, error) {
-	a, err := s.repo.Get(id)
-	if a == nil {
-		return nil, entity.ErrNotFound
+func (s *Service) GetSite(id entity.ID) (entity.Site, error) {
+	site, err := s.repo.Get(id)
+	if err == entity.ErrNotFound {
+		return entity.Site{}, nil
 	}
 	if err != nil {
-		return nil, err
+		return entity.Site{}, err
 	}
-	return a, nil
+	return site, nil
 }
 
 // ListSite list article
@@ -43,14 +43,11 @@ func (s *Service) ListSite() ([]entity.Site, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(sites) == 0 {
-		return nil, entity.ErrNotFound
-	}
 	return sites, nil
 }
 
 // UpdateSite Update a article
-func (s *Service) UpdateSite(e *entity.Site) error {
+func (s *Service) UpdateSite(e entity.Site) error {
 	if err := e.Validate(); err != nil {
 		return err
 	}

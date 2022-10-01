@@ -11,11 +11,13 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/usecase/user"
 )
 
+// MakeUserHandlers
 func MakeUserHandlers(e *echo.Echo, service user.UseCase) {
 	e.GET("/v1/user", ListUsers(service))
 	e.POST("/v1/user", CreateUser(service)) // name, devicehash, avatarURL
 }
 
+// ListUsers
 func ListUsers(service user.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		users, err := service.ListUsers()
@@ -56,6 +58,10 @@ func CreateUser(service user.UseCase) echo.HandlerFunc {
 			return c.JSON(http.StatusOK, nil)
 		}
 		imageByte, err := ioutil.ReadAll(avatarFile)
+		if err != nil {
+			log.Infof("パラメータavatarの形式が間違っています: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
 		avatarImage := entity.Image{
 			File: imageByte,
 			Name: avatar.Filename,

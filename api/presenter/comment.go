@@ -22,6 +22,7 @@ type Comment struct {
 
 type CommentList []*Comment
 
+// pickComment
 func pickComment(comment entity.Comment) (Comment, error) {
 	commentPresenter := Comment{
 		ID:         comment.ID.String(),
@@ -35,6 +36,7 @@ func pickComment(comment entity.Comment) (Comment, error) {
 	return commentPresenter, nil
 }
 
+// PickCommentList
 func PickCommentList(commentList []entity.Comment) (CommentList, error) {
 	var commentPresenterList CommentList
 	for _, article := range commentList {

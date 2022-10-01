@@ -34,19 +34,24 @@ func NewSiteMySQL(db *gorm.DB) *SiteMySQL {
 	}
 }
 
-func (r *SiteMySQL) Get(id entity.ID) (*entity.Site, error) {
-	return nil, nil
+// Get
+func (r *SiteMySQL) Get(id entity.ID) (entity.Site, error) {
+	return entity.Site{}, nil
 }
 
-func (r *SiteMySQL) Search(query string) ([]*entity.Site, error) {
-	return nil, nil
+// Search
+func (r *SiteMySQL) Search(query string) ([]entity.Site, error) {
+	return []entity.Site{}, nil
 }
 
+// List
 func (r *SiteMySQL) List() ([]entity.Site, error) {
 	var siteMySQLList []SiteMySQLPresenter
-	if err := r.db.Find(&siteMySQLList).Error; err != nil {
+	if err := r.db.Find(&siteMySQLList).Error; err != nil && err != gorm.ErrRecordNotFound {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
+	} else if err == gorm.ErrRecordNotFound {
+		return []entity.Site{}, nil
 	}
 	var siteList []entity.Site
 	for _, siteMySQL := range siteMySQLList {
@@ -66,11 +71,13 @@ func (r *SiteMySQL) List() ([]entity.Site, error) {
 	return siteList, nil
 }
 
-func (r *SiteMySQL) Create(e *entity.Site) (entity.ID, error) {
+// Create
+func (r *SiteMySQL) Create(e entity.Site) (entity.ID, error) {
 	return e.ID, nil
 }
 
-func (r *SiteMySQL) Update(e *entity.Site) error {
+// Update
+func (r *SiteMySQL) Update(e entity.Site) error {
 	var siteMySQL SiteMySQLPresenter
 	if err := r.db.Model(&siteMySQL).Where("id = ?", e.ID.String()).Update("last_updated_at", e.LastUpdatedAt).Error; err != nil {
 		return err
@@ -78,6 +85,7 @@ func (r *SiteMySQL) Update(e *entity.Site) error {
 	return nil
 }
 
+// Delete
 func (r *SiteMySQL) Delete(id entity.ID) error {
 	return nil
 }

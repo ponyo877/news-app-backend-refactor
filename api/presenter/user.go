@@ -21,6 +21,7 @@ type User struct {
 
 type UserList []*User
 
+// pickUser
 func pickUser(user entity.User) (User, error) {
 	userPresenter := User{
 		ID:         user.ID.String(),
@@ -33,6 +34,7 @@ func pickUser(user entity.User) (User, error) {
 	return userPresenter, nil
 }
 
+// PickUserList
 func PickUserList(userList []entity.User) (UserList, error) {
 	var userPresenterList UserList
 	for _, article := range userList {

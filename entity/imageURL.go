@@ -22,6 +22,7 @@ func NewImageURL(imageURL string) (ImageURL, error) {
 	return newImageURL, nil
 }
 
+// ContentToImangeURL
 func ContentToImangeURL(content string) (ImageURL, error) {
 	newImageURL := ImageURL{
 		Content: content,
@@ -40,6 +41,7 @@ func (i *ImageURL) Validate() error {
 	return nil
 }
 
+// URL
 func (i *ImageURL) URL() (string, error) {
 	if i.Value != "" {
 		return i.Value, nil
