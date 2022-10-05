@@ -50,7 +50,7 @@ func LoadMysqlConfig() (MysqlConfig, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return MysqlConfig{}, err
 	}
-	log.Infof("user: %v, pass: %v, host: %v, db: %v", config.DBUser, config.DBPassword, config.DBHost, config.DBDatabase)
+	log.Infof("user: %v, pass: %v, host: %v, db: %v, port: %v", config.DBUser, config.DBPassword, config.DBHost, config.DBDatabase, config.DBPort)
 	return config, nil
 }
 
@@ -64,7 +64,7 @@ func LoadRedisConfig() (RedisConfig, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return RedisConfig{}, err
 	}
-	log.Infof("pass: %v, host: %v, db: %v", config.KVSPassword, config.KVSHost, config.KVSDatabase)
+	log.Infof("pass: %v, host: %v, db: %v, port: %v", config.KVSPassword, config.KVSHost, config.KVSDatabase, config.KVSPort)
 	return config, nil
 
 }
@@ -79,7 +79,7 @@ func LoadElasticSearchConfig() (ElasticSearchConfig, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return ElasticSearchConfig{}, err
 	}
-	log.Infof("user: %v, pass: %v, host: %v", config.SEUser, config.SEPassword, config.SESHost)
+	log.Infof("user: %v, pass: %v, host: %v, port: %v", config.SEUser, config.SEPassword, config.SESHost, config.SEPort)
 	return config, nil
 }
 
@@ -93,7 +93,7 @@ func LoadWebDAVConfig() (WebDAVConfig, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return WebDAVConfig{}, err
 	}
-	log.Infof("user: %v, pass: %v, host: %v", config.WDUser, config.WDPassword, config.WDSHost)
+	log.Infof("user: %v, pass: %v, host: %v, port: %v", config.WDUser, config.WDPassword, config.WDSHost, config.WDPort)
 	return config, nil
 }
 
