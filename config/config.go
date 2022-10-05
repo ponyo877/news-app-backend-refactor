@@ -46,6 +46,7 @@ func LoadMysqlConfig() (MysqlConfig, error) {
 	viper.BindEnv("DB_PASSWORD")
 	viper.BindEnv("DB_HOST")
 	viper.BindEnv("DB_DATABASE")
+	viper.BindEnv("DB_PORT")
 	var config MysqlConfig
 	if err := viper.Unmarshal(&config); err != nil {
 		return MysqlConfig{}, err
@@ -60,6 +61,7 @@ func LoadRedisConfig() (RedisConfig, error) {
 	viper.BindEnv("KVS_PASSWORD")
 	viper.BindEnv("KVS_HOST")
 	viper.BindEnv("KVS_DATABASE")
+	viper.BindEnv("KVS_PORT")
 	var config RedisConfig
 	if err := viper.Unmarshal(&config); err != nil {
 		return RedisConfig{}, err
@@ -75,6 +77,7 @@ func LoadElasticSearchConfig() (ElasticSearchConfig, error) {
 	viper.BindEnv("SE_USER")
 	viper.BindEnv("SE_PASSWORD")
 	viper.BindEnv("SE_HOST")
+	viper.BindEnv("SE_PORT")
 	var config ElasticSearchConfig
 	if err := viper.Unmarshal(&config); err != nil {
 		return ElasticSearchConfig{}, err
@@ -89,6 +92,7 @@ func LoadWebDAVConfig() (WebDAVConfig, error) {
 	viper.BindEnv("WD_USER")
 	viper.BindEnv("WD_PASSWORD")
 	viper.BindEnv("WD_HOST")
+	viper.BindEnv("WD_PORT")
 	var config WebDAVConfig
 	if err := viper.Unmarshal(&config); err != nil {
 		return WebDAVConfig{}, err
