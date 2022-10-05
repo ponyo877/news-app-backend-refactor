@@ -33,7 +33,7 @@ func main() {
 	if err != nil {
 		log.Panicf("LoadMysqlConfigに失敗しました: %v", err)
 	}
-	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:3306)/%s?parseTime=true", mysqlConfig.DBUser, mysqlConfig.DBPassword, mysqlConfig.DBHost, mysqlConfig.DBDatabase)
+	dataSourceName := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", mysqlConfig.DBUser, mysqlConfig.DBPassword, mysqlConfig.DBHost, mysqlConfig.DBPort, mysqlConfig.DBDatabase)
 	gormDB, err := gorm.Open(mysql.Open(dataSourceName), &gorm.Config{})
 	if err != nil {
 		log.Panicf("gormDBクライアント作成に失敗しました: %v", err)
@@ -49,7 +49,7 @@ func main() {
 		log.Panicf("LoadRedisConfigに失敗しました: %v", err)
 	}
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     redisConfig.KVSHost + ":6379",
+		Addr:     redisConfig.KVSHost + ":" + redisConfig.KVSPort,
 		Password: redisConfig.KVSPassword,
 		DB:       redisConfig.KVSDatabase,
 	})
@@ -60,7 +60,7 @@ func main() {
 		log.Panicf("LoadElasticSearchConfigに失敗しました: %v", err)
 	}
 	es, err := elastic.NewClient(
-		elastic.SetURL("http://"+elasticSearchConfig.SESHost+":9200"),
+		elastic.SetURL("http://"+elasticSearchConfig.SESHost+":"+elasticSearchConfig.SEPort),
 		elastic.SetBasicAuth(elasticSearchConfig.SEUser, elasticSearchConfig.SEPassword),
 		elastic.SetSniff(false),
 	)
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	webdav := gowebdav.NewClient(
-		"http://"+webdavConfig.WDSHost+":8080",
+		"http://"+webdavConfig.WDSHost+":"+webdavConfig.WDPort,
 		webdavConfig.WDUser,
 		webdavConfig.WDPassword,
 	)

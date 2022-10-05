@@ -11,24 +11,28 @@ type MysqlConfig struct {
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	DBHost     string `mapstructure:"DB_HOST"`
 	DBDatabase string `mapstructure:"DB_DATABASE"`
+	DBPort     string `mapstructure:"DB_PORT"`
 }
 
 type RedisConfig struct {
 	KVSPassword string `mapstructure:"KVS_PASSWORD"`
 	KVSHost     string `mapstructure:"KVS_HOST"`
 	KVSDatabase int    `mapstructure:"KVS_DATABASE"`
+	KVSPort     string `mapstructure:"KVS_PORT"`
 }
 
 type ElasticSearchConfig struct {
 	SEUser     string `mapstructure:"SE_USER"`
 	SEPassword string `mapstructure:"SE_PASSWORD"`
 	SESHost    string `mapstructure:"SE_HOST"`
+	SEPort     string `mapstructure:"SE_PORT"`
 }
 
 type WebDAVConfig struct {
 	WDUser     string `mapstructure:"WD_USER"`
 	WDPassword string `mapstructure:"WD_PASSWORD"`
 	WDSHost    string `mapstructure:"WD_HOST"`
+	WDPort     string `mapstructure:"WD_PORT"`
 }
 
 type AppConfig struct {
