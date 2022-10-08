@@ -101,7 +101,12 @@ func ListPopularArticles(service article.UseCase) echo.HandlerFunc {
 // ListSearchedArticles
 func ListSearchedArticles(service article.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		keyword := c.QueryParam("keyword")
+		keywordString := c.QueryParam("keyword")
+		keyword, err := entity.NewKeyword(keywordString)
+		if err != nil {
+			log.Infof("NewKeywordが失敗しました: %v", err)
+			return c.JSON(http.StatusOK, nil)
+		}
 		articles, err := service.SearchArticles(keyword)
 		if err != nil {
 			log.Infof("サービスSearchArticlesが失敗しました: %v", err)

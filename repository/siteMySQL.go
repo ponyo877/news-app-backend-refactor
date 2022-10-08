@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -47,10 +48,10 @@ func (r *SiteMySQL) Search(query string) ([]entity.Site, error) {
 // List
 func (r *SiteMySQL) List() ([]entity.Site, error) {
 	var siteMySQLList []SiteMySQLPresenter
-	if err := r.db.Find(&siteMySQLList).Error; err != nil && err != gorm.ErrRecordNotFound {
+	if err := r.db.Find(&siteMySQLList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
-	} else if err == gorm.ErrRecordNotFound {
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return []entity.Site{}, nil
 	}
 	var siteList []entity.Site

@@ -22,8 +22,8 @@ func NewImageURL(imageURL string) (ImageURL, error) {
 	return newImageURL, nil
 }
 
-// ContentToImangeURL
-func ContentToImangeURL(content string) (ImageURL, error) {
+// ContentToImageURL
+func ContentToImageURL(content string) (ImageURL, error) {
 	newImageURL := ImageURL{
 		Content: content,
 	}

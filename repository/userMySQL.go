@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -45,9 +46,9 @@ func (r *UserMySQL) GetOption(deviceHash string) (entity.User, error) {
 	if err := r.db.
 		Where("device_hash = ?", deviceHash).
 		Find(&userMySQLPresenter).
-		Error; err != nil && err != gorm.ErrRecordNotFound {
+		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return entity.User{}, err
-	} else if err == gorm.ErrRecordNotFound {
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return entity.User{}, entity.ErrNotFound
 	}
 	ID, err := entity.StringToID(userMySQLPresenter.ID)
@@ -72,10 +73,10 @@ func (r *UserMySQL) Search(query string) ([]entity.User, error) {
 // List
 func (r *UserMySQL) List() ([]entity.User, error) {
 	var userMySQLList []UserMySQLPresenter
-	if err := r.db.Find(&userMySQLList).Error; err != nil && err != gorm.ErrRecordNotFound {
+	if err := r.db.Find(&userMySQLList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
-	} else if err == gorm.ErrRecordNotFound {
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return []entity.User{}, nil
 	}
 	var userList []entity.User

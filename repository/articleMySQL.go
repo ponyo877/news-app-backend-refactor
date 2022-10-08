@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -44,6 +45,7 @@ func (p *SiteArticleRepositoryPresenter) pickArticle() (entity.Article, error) {
 		LastUpdatedAt: p.SiteMySQLPresenter.LastUpdatedAt,
 	}
 	articleID, err := entity.StringToID(p.ArticleRepositoryPresenter.ID)
+
 	if err != nil {
 		return entity.Article{}, err
 	}
@@ -84,13 +86,13 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 	if err := r.db.
 		Model(&ArticleRepositoryPresenter{}).
 		Select("articles.*, sites.*").
-		Joins("LEFT JOIN sites on sites.id = articles.site_id").
+		Joins("LEFT JOIN sites ON sites.id = articles.site_id").
 		Where("articles.id = ?", ID.String()).
 		Find(&siteArticleRepositoryPresenter).Error; err != nil {
 		log.Infof("DBの接続に失敗しました: %v", err)
 	}
 	article, err := siteArticleRepositoryPresenter.pickArticle()
-	if err == gorm.ErrRecordNotFound {
+	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return entity.Article{}, entity.ErrNotFound
 	}
 	if err != nil {
@@ -106,13 +108,13 @@ func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet
 	if err := r.db.
 		Model(&ArticleRepositoryPresenter{}).
 		Select("articles.*, sites.*").
-		Joins("LEFT JOIN sites on sites.id = articles.site_id").
+		Joins("LEFT JOIN sites ON sites.id = articles.site_id").
 		Where("sites.id NOT IN ?", invisibleIDSet.Strings()).
 		Where("articles.published_at < ?", basePublishedAt).
-		Find(&siteArticleRepositoryPresenterList).Error; err != nil && err != gorm.ErrRecordNotFound {
+		Find(&siteArticleRepositoryPresenterList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
-	} else if err == gorm.ErrRecordNotFound {
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return []entity.Article{}, nil
 	}
 	articleList, err := siteArticleRepositoryPresenterList.pickArticleList()
@@ -163,16 +165,34 @@ func (r *ArticleRepository) List(IDList []entity.ID) ([]entity.Article, error) {
 	var articleList []entity.Article
 	for _, ID := range IDList {
 		article, err := r.Get(ID)
-		if err != nil && err != gorm.ErrRecordNotFound {
+		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 			log.Infof("Getが失敗しました: %v", err)
 			return nil, err
-		} else if err == gorm.ErrRecordNotFound {
+		} else if errors.Is(err, gorm.ErrRecordNotFound) {
 			continue
 		}
 		articleList = append(articleList, article)
 	}
 	if len(articleList) == 0 {
 		return []entity.Article{}, nil
+	}
+	return articleList, nil
+}
+
+func (r *ArticleRepository) SearchOnlyID(keyword entity.Keyword) ([]entity.Article, error) {
+	var siteArticleRepositoryPresenterList SiteArticleRepositoryPresenterList
+	query := "SELECT articles.*, sites.*, MATCH(articles.title) AGAINST(? IN BOOLEAN MODE) AS score " +
+		"FROM articles LEFT JOIN sites ON sites.id = articles.site_id " +
+		"HAVING score > 0 ORDER BY score DESC"
+
+	if err := r.db.Raw(query, keyword.QueryArg()).
+		Scan(&siteArticleRepositoryPresenterList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Infof("DBの接続に失敗しました: %v", err)
+	}
+	articleList, err := siteArticleRepositoryPresenterList.pickArticleList()
+	if err != nil {
+		log.Infof("pickArticleListに失敗しました: %v", err)
+		return nil, err
 	}
 	return articleList, nil
 }

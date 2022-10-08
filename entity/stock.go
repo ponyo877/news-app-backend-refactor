@@ -44,9 +44,9 @@ func (s Stock) StockLatestArticle() ([]Site, ArticleSet, error) {
 			if NewArticleTitle(item.Title).ContainsBlacklist() {
 				continue
 			}
-			imageURL, err := ContentToImangeURL(item.Content)
+			imageURL, err := ContentToImageURL(item.Content)
 			if err != nil {
-				log.Infof("ContentToImangeURLに失敗しました :%v", err)
+				log.Infof("ContentToImageURLに失敗しました :%v", err)
 				return nil, NewArticleSet(), err
 			}
 			newArticle, err := NewArticle(item.Title, item.Link, imageURL, site, publishedAt)

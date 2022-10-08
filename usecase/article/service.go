@@ -23,9 +23,9 @@ func (s *Service) CreateArticle(article entity.Article) error {
 	if _, _, err := s.repository.Create(article); err != nil {
 		return err
 	}
-	if err := s.repository.CreateForSearch(article); err != nil {
-		return err
-	}
+	// if err := s.repository.CreateForSearch(article); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -42,18 +42,22 @@ func (s *Service) GetArticle(id entity.ID) (entity.Article, error) {
 }
 
 // SearchArticles search article
-func (s *Service) SearchArticles(keyword string) ([]entity.Article, error) {
-	IDList, err := s.repository.SearchOnlyID(keyword)
+func (s *Service) SearchArticles(keyword entity.Keyword) ([]entity.Article, error) {
+	articles, err := s.repository.SearchOnlyID(keyword)
 	if err != nil {
 		return nil, err
 	}
-	if len(IDList) == 0 {
-		return []entity.Article{}, nil
-	}
-	articles, err := s.repository.List(IDList)
-	if err != nil {
-		return nil, err
-	}
+	// IDList, err := s.repository.SearchOnlyID(keyword)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if len(IDList) == 0 {
+	// 	return []entity.Article{}, nil
+	// }
+	// articles, err := s.repository.List(IDList)
+	// if err != nil {
+	// 	return nil, err
+	// }
 	return articles, nil
 }
 

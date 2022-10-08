@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -50,10 +51,10 @@ func (r *CommentMySQL) Search(query string) ([]entity.Comment, error) {
 func (r *CommentMySQL) List(articleID entity.ID) ([]entity.Comment, error) {
 	var commentMySQLList []CommentMySQLPresenter
 	err := r.db.Where("article_id = ?", articleID.String()).Find(&commentMySQLList).Error
-	if err != nil && err != gorm.ErrRecordNotFound {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
-	} else if err == gorm.ErrRecordNotFound {
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return []entity.Comment{}, nil
 	}
 	var commentList []entity.Comment

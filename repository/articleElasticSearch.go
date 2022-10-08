@@ -28,11 +28,12 @@ func NewArticleElasticSearch(se *elastic.Client) *ArticleElasticSearch {
 }
 
 // Search
-func (r *ArticleRepository) SearchOnlyID(keyword string) ([]entity.ID, error) {
+// func (r *ArticleRepository) SearchOnlyID(keyword entity.Keyword) ([]entity.ID, error) {
+func (r *ArticleElasticSearch) SearchOnlyID(keyword entity.Keyword) ([]entity.ID, error) {
 	var idList []entity.ID
 	searchResult, err := r.se.Search().
 		Index("article").
-		Query(elastic.NewMatchQuery("Title", keyword)).
+		Query(elastic.NewMatchQuery("Title", keyword.QueryArg())).
 		Do(context.Background())
 	if err != nil {
 		return nil, err
@@ -59,7 +60,8 @@ func (r *ArticleRepository) SearchOnlyID(keyword string) ([]entity.ID, error) {
 }
 
 // CreateForSearch
-func (r *ArticleRepository) CreateForSearch(e entity.Article) error {
+// func (r *ArticleRepository) CreateForSearch(e entity.Article) error {
+func (r *ArticleElasticSearch) CreateForSearch(e entity.Article) error {
 	jsonString, err := toJsonString(e)
 	if err != nil {
 		return err
