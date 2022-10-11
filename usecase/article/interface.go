@@ -10,7 +10,7 @@ import (
 type Reader interface {
 	Get(ID entity.ID) (entity.Article, error)
 	SearchOnlyID(keyword entity.Keyword) ([]entity.Article, error)
-	// SearchOnlyID(keyword string) ([]entity.ID, error)
+	// SearchOnlyID(keyword string) ([]entity.ID, error) // ElasticSearch用
 	List(IDList []entity.ID) ([]entity.Article, error)
 	ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error)
 	ListOnlyIDOrderByViewCount(period string) ([]entity.ID, error)
@@ -19,7 +19,7 @@ type Reader interface {
 // Writer interface
 type Writer interface {
 	Create(e entity.Article) (entity.ID, time.Time, error)
-	// CreateForSearch(e entity.Article) error
+	// CreateForSearch(e entity.Article) error // ElasticSearch用
 	Update(e entity.Article) error
 	DeleteByID(ID entity.ID) error
 	IncrementViewCount(ID entity.ID) error

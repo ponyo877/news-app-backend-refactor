@@ -111,6 +111,7 @@ func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet
 		Joins("LEFT JOIN sites ON sites.id = articles.site_id").
 		Where("sites.id NOT IN ?", invisibleIDSet.Strings()).
 		Where("articles.published_at < ?", basePublishedAt).
+		Order("articles.published_at desc").
 		Find(&siteArticleRepositoryPresenterList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
