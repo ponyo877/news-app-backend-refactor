@@ -13,7 +13,7 @@ import (
 
 // MakeBookHandlers make url handlers
 func MakeArticleHandlers(e *echo.Echo, service article.UseCase) {
-	e.GET("/v1/article", ListArticles(service))                             // lastpublished, skipIDs
+	e.GET("/v1/article", ListArticles(service))                             // lastPublishedAt, skipIDs
 	e.GET("/v1/article/view/popular/:period", ListPopularArticles(service)) // kind
 	e.GET("/v1/article/search", ListSearchedArticles(service))              // words
 	e.POST("/v1/article/view/:article_id", IncrementViewCount(service))     // post_id
@@ -38,19 +38,33 @@ func MakeArticleHandlers(e *echo.Echo, service article.UseCase) {
 // ListArticles
 func ListArticles(service article.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		baseCreatedAtString := c.QueryParam("lastpublished")
-		baseCreatedAt, err := time.Parse(time.RFC3339, baseCreatedAtString)
-		if err != nil {
-			log.Infof("パラメータlastpublishedの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+		var lastPublishedAt time.Time
+		lastPublishedAtString := c.QueryParam("lastPublishedAt")
+		if lastPublishedAtString == "" {
+			lastPublishedAt = time.Time{}
+		} else {
+			var err error
+			lastPublishedAt, err = time.Parse(time.RFC3339, lastPublishedAtString)
+			if err != nil {
+				log.Infof("パラメータlastPublishedAtの形式が間違っています: %v", err)
+				return c.JSON(http.StatusOK, nil)
+			}
 		}
+
+		var invisibleIDSet entity.IDSet
 		invisibleSiteIDSetString := c.QueryParam("skipIDs")
-		invisibleIDSet, err := entity.StringToIDSet(invisibleSiteIDSetString)
-		if err != nil {
-			log.Infof("パラメータskipIDsの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+		if invisibleSiteIDSetString == "" {
+			invisibleIDSet = entity.NewIDSet()
+		} else {
+			var err error
+			invisibleIDSet, err = entity.StringToIDSet(invisibleSiteIDSetString)
+			if err != nil {
+				log.Infof("パラメータskipIDsの形式が間違っています: %v", err)
+				return c.JSON(http.StatusOK, nil)
+			}
 		}
-		articles, err := service.ListArticles(baseCreatedAt, invisibleIDSet)
+
+		articles, err := service.ListArticles(lastPublishedAt, invisibleIDSet)
 		if err == entity.ErrNotFound {
 			return c.JSON(http.StatusOK, presenter.ArticleResponce{
 				Data: []*presenter.Article{},
@@ -66,7 +80,8 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 			return c.JSON(http.StatusOK, nil)
 		}
 		responce := presenter.ArticleResponce{
-			Data: articleJson,
+			Data:            articleJson,
+			LastPublishedAt: articles[len(articles)-1].PublishedAt,
 		}
 		return c.JSON(http.StatusOK, responce)
 	}

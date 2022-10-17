@@ -105,19 +105,33 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 // ListOption
 func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error) {
 	var siteArticleRepositoryPresenterList SiteArticleRepositoryPresenterList
-	if err := r.db.
+
+	newDB := r.db.
 		Model(&ArticleRepositoryPresenter{}).
 		Select("articles.*, sites.*").
-		Joins("LEFT JOIN sites ON sites.id = articles.site_id").
-		Where("sites.id NOT IN ?", invisibleIDSet.Strings()).
-		Where("articles.published_at < ?", basePublishedAt).
-		Order("articles.published_at desc").
+		Joins("LEFT JOIN sites ON sites.id = articles.site_id")
+
+	if !basePublishedAt.IsZero() {
+		newDB = newDB.Where("articles.published_at < ?", basePublishedAt)
+	}
+	if !invisibleIDSet.IsZero() {
+		newDB = newDB.Where("sites.id NOT IN ?", invisibleIDSet.Strings())
+	}
+	if err := newDB.
+		// Model(&ArticleRepositoryPresenter{}).
+		// Select("articles.*, sites.*").
+		// Joins("LEFT JOIN sites ON sites.id = articles.site_id").
+		// Where("sites.id NOT IN ?", invisibleIDSet.Strings()).
+		// Where("articles.published_at < ?", basePublishedAt).
+		Order("articles.published_at DESC").
+		Limit(15).
 		Find(&siteArticleRepositoryPresenterList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err
 	} else if errors.Is(err, gorm.ErrRecordNotFound) {
 		return []entity.Article{}, nil
 	}
+
 	articleList, err := siteArticleRepositoryPresenterList.pickArticleList()
 	if err != nil {
 		log.Infof("pickArticleListに失敗しました: %v", err)

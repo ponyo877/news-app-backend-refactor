@@ -45,3 +45,8 @@ func (i *IDSet) Strings() []string {
 	}
 	return idSetString
 }
+
+// IsZero
+func (i *IDSet) IsZero() bool {
+	return i.Set.Cardinality() == 0
+}

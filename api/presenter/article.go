@@ -7,7 +7,8 @@ import (
 )
 
 type ArticleResponce struct {
-	Data []*Article `json:"data"`
+	Data            []*Article `json:"data"`
+	LastPublishedAt time.Time  `json:"lastPublishedAt"`
 }
 
 type Article struct {
