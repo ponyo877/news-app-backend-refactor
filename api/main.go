@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/go-redis/redis/v9"
-	"github.com/studio-b12/gowebdav"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
@@ -67,23 +66,26 @@ func main() {
 	// if err != nil {
 	// 	log.Panicf("ElasticSearchクライアント作成に失敗しました: %v", err)
 	// }
+
 	webdavConfig, err := config.LoadWebDAVConfig()
 	if err != nil {
 		log.Panicf("LoadWebDAVConfigに失敗しました: %v", err)
 	}
+	nginxEndpoint := fmt.Sprintf("http://%s:%s", webdavConfig.WDSHost, webdavConfig.WDPort)
 
-	webdav := gowebdav.NewClient(
-		"http://"+webdavConfig.WDSHost+":"+webdavConfig.WDPort,
-		webdavConfig.WDUser,
-		webdavConfig.WDPassword,
-	)
+	// webdav := gowebdav.NewClient(
+	// 	"http://"+webdavConfig.WDSHost+":"+webdavConfig.WDPort,
+	// 	webdavConfig.WDUser,
+	// 	webdavConfig.WDPassword,
+	// )
 
 	articlRepository := repository.NewArticleRepository(gormDB, rdb) //  es)
 	articleService := article.NewService(articlRepository)
 	siteRepository := repository.NewSiteMySQL(gormDB)
 	userRepository := repository.NewUserMySQL(gormDB)
 	commentRepository := repository.NewCommentMySQL(gormDB)
-	imageRepository := repository.NewImageWebDAV(webdav)
+	// imageRepository := repository.NewImageWebDAV(webdav)
+	imageRepository := repository.NewImageNginx(nginxEndpoint)
 	siteService := site.NewService(siteRepository)
 	stockService := stock.NewService(articleService, siteService)
 	fileioService := fileio.NewService(imageRepository, appConfig.APRoot)
@@ -102,5 +104,5 @@ func main() {
 	handler.MakeImageHandlers(e, fileioService)
 	handler.MakeCommentHandlers(e, commentService)
 
-	e.Logger.Fatal(e.Start(":80"))
+	e.Logger.Fatal(e.Start(":" + appConfig.APPort))
 }
