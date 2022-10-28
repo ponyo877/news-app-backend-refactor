@@ -26,12 +26,12 @@ func ListSite(service site.UseCase) echo.HandlerFunc {
 		}
 		if err != nil {
 			log.Infof("サービスListSiteが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		siteJson, err := presenter.PickSiteList(sites)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.SiteResponce{
 			Data: siteJson,

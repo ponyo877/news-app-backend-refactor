@@ -47,7 +47,7 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 			lastPublishedAt, err = time.Parse(time.RFC3339, lastPublishedAtString)
 			if err != nil {
 				log.Infof("パラメータlastPublishedAtの形式が間違っています: %v", err)
-				return c.JSON(http.StatusOK, nil)
+				return c.JSON(http.StatusBadRequest, nil)
 			}
 		}
 
@@ -60,7 +60,7 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 			invisibleIDSet, err = entity.StringToIDSet(invisibleSiteIDSetString)
 			if err != nil {
 				log.Infof("パラメータskipIDsの形式が間違っています: %v", err)
-				return c.JSON(http.StatusOK, nil)
+				return c.JSON(http.StatusBadRequest, nil)
 			}
 		}
 
@@ -72,12 +72,12 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 		}
 		if err != nil {
 			log.Infof("サービスListArticlesが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.ArticleResponce{
 			Data:            articleJson,
@@ -99,12 +99,12 @@ func ListPopularArticles(service article.UseCase) echo.HandlerFunc {
 		}
 		if err != nil {
 			log.Infof("サービスListPopularArticlesが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.ArticleResponce{
 			Data: articleJson,
@@ -120,17 +120,17 @@ func ListSearchedArticles(service article.UseCase) echo.HandlerFunc {
 		keyword, err := entity.NewKeyword(keywordString)
 		if err != nil {
 			log.Infof("NewKeywordが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		articles, err := service.SearchArticles(keyword)
 		if err != nil {
 			log.Infof("サービスSearchArticlesが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.ArticleResponce{
 			Data: articleJson,
@@ -146,7 +146,7 @@ func IncrementViewCount(service article.UseCase) echo.HandlerFunc {
 		articleID, err := entity.StringToID(articleIDString)
 		if err != nil {
 			log.Infof("StringToIDが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		if err := service.IncrementViewCount(articleID); err != nil {
 			log.Infof("サービスIncrementViewCountが失敗しました: %v", err)
@@ -168,12 +168,12 @@ func ListRecommendArticle(service article.UseCase) echo.HandlerFunc {
 		}
 		if err != nil {
 			log.Infof("サービスListPopularArticlesが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {
 			log.Infof("PickArticleListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.ArticleResponce{
 			Data: articleJson,

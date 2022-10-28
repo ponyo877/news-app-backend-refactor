@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -28,12 +29,12 @@ func ListUsers(service user.UseCase) echo.HandlerFunc {
 		}
 		if err != nil {
 			log.Infof("サービスListUserが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		userJson, err := presenter.PickUserList(users)
 		if err != nil {
 			log.Infof("PickUserListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.UserResponce{
 			Data: userJson,
@@ -45,22 +46,29 @@ func ListUsers(service user.UseCase) echo.HandlerFunc {
 // CreateUser
 func CreateUser(service user.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		name := c.FormValue("name")
 		deviceHash := c.FormValue("devicehash")
+		name := c.FormValue("name")
 		avatar, err := c.FormFile("avatar")
 		if err != nil {
-			log.Infof("パラメータavatarの形式が間違っています: %v", err)
+			if !errors.Is(err, http.ErrMissingFile) {
+				log.Infof("パラメータavatarの形式が間違っています: %v", err)
+				return c.JSON(http.StatusBadRequest, nil)
+			}
+			if _, err := service.CreateUser(name, entity.NewImage(), deviceHash); err != nil {
+				log.Infof("サービスCreateUserが失敗しました: %v", err)
+				return c.JSON(http.StatusBadRequest, nil)
+			}
 			return c.JSON(http.StatusOK, nil)
 		}
 		avatarFile, err := avatar.Open()
 		if err != nil {
 			log.Infof("アップロードされたファイルが開けません: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		imageByte, err := ioutil.ReadAll(avatarFile)
 		if err != nil {
 			log.Infof("パラメータavatarの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		avatarImage := entity.Image{
 			File: imageByte,
@@ -68,7 +76,7 @@ func CreateUser(service user.UseCase) echo.HandlerFunc {
 		}
 		if _, err := service.CreateUser(name, avatarImage, deviceHash); err != nil {
 			log.Infof("サービスCreateUserが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		return c.JSON(http.StatusOK, nil)
 	}

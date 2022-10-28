@@ -24,7 +24,7 @@ func FetchImage(service fileio.UseCase) echo.HandlerFunc {
 		image, err := service.FetchImage(filename)
 		if err != nil {
 			log.Infof("サービスFetchImageが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		io.Copy(c.Response().Writer, bytes.NewReader(image.File))
 		return c.NoContent(http.StatusOK)
@@ -37,17 +37,17 @@ func SaveImage(service fileio.UseCase) echo.HandlerFunc {
 		file, err := c.FormFile("file")
 		if err != nil {
 			log.Infof("パラメータfileの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		imageFile, err := file.Open()
 		if err != nil {
 			log.Infof("アップロードされたファイルが開けません: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		imageByte, err := ioutil.ReadAll(imageFile)
 		if err != nil {
 			log.Infof("パラメータfileの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		image := entity.Image{
 			File: imageByte,
@@ -55,7 +55,7 @@ func SaveImage(service fileio.UseCase) echo.HandlerFunc {
 		}
 		if _, err := service.SaveImage(image); err != nil {
 			log.Infof("サービスSaveImageが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		return c.JSON(http.StatusOK, nil)
 	}

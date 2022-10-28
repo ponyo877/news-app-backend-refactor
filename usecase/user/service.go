@@ -24,9 +24,13 @@ func NewService(r Repository, f fileio.UseCase) *Service {
 
 // CreateUser create a User
 func (s *Service) CreateUser(name string, avatarImage entity.Image, deviceHash string) (entity.ID, error) {
-	avatarURL, err := s.fileioService.SaveImage(avatarImage)
-	if err != nil {
-		return entity.NewID(), err
+	var avatarURL string
+	var err error
+	if !avatarImage.IsEmpty() {
+		avatarURL, err = s.fileioService.SaveImage(avatarImage)
+		if err != nil {
+			return entity.NewID(), err
+		}
 	}
 	user, err := entity.NewUser(name, avatarURL, deviceHash)
 	if err != nil {

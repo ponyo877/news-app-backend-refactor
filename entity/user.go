@@ -29,7 +29,7 @@ func NewUser(name, avatarURL, deviceHash string) (User, error) {
 
 // Validate validate data
 func (c *User) Validate() error {
-	if c.Name == "" || c.AvatarURL == "" || c.DeviceHash == "" {
+	if c.DeviceHash == "" {
 		return ErrInvalidEntity
 	}
 	return nil

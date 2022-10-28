@@ -18,7 +18,7 @@ func StockLatestArticle(service stock.UseCase) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if err := service.StockLatestArticle(); err != nil {
 			log.Infof("サービスStockLatestArticleが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		log.Info("サービスStockLatestArticleが成功しました")
 		return c.JSON(http.StatusOK, nil)

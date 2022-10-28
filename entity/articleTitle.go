@@ -1,5 +1,11 @@
 package entity
 
+import (
+	"regexp"
+
+	"github.com/tomoemon/text_normalizer"
+)
+
 type ArticleTitle struct {
 	Title string
 }
@@ -18,10 +24,20 @@ func (a ArticleTitle) String() string {
 
 // ContainsBlacklist
 func (a ArticleTitle) ContainsBlacklist() bool {
-	return false
+	return NewBlackList(a.normalizedTitle()).Contain()
 }
 
 // Validate
 func (a ArticleTitle) Validate() error {
 	return nil
+}
+
+// normalize
+func (a ArticleTitle) normalizedTitle() string {
+	normalizer := text_normalizer.NewTextNormalizer(
+		text_normalizer.AlphabetToHankaku,
+		text_normalizer.KanaToHiragana,
+	)
+	rep := regexp.MustCompile("[^0-9a-zA-Zぁ-んァ-ヶ一-龠ー]+")
+	return rep.ReplaceAllString(normalizer.Replace(a.Title), "@")
 }

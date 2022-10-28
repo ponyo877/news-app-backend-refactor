@@ -14,6 +14,7 @@ require (
 	github.com/olivere/elastic/v7 v7.0.32
 	github.com/spf13/viper v1.13.0
 	github.com/studio-b12/gowebdav v0.0.0-20220128162035-c7b1ff8a5e62
+	github.com/tomoemon/text_normalizer v0.0.0-20181203025331-2cb0d74e3d89
 	gorm.io/driver/mysql v1.3.6
 	gorm.io/gorm v1.23.8
 )

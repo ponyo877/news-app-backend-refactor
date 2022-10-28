@@ -7,6 +7,7 @@ import (
 	"github.com/labstack/gommon/log"
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // UserMySQL mysql repository
@@ -108,7 +109,18 @@ func (r *UserMySQL) Create(e entity.User) (entity.ID, error) {
 		UpdatedAt:  e.UpdatedAt,
 		CreatedAt:  e.CreatedAt,
 	}
-	if err := r.db.Create(userMySQLPresenter).Error; err != nil {
+	updateColumns := []string{}
+	log.Infof("ImageURL: %v", userMySQLPresenter.ImageURL)
+	if userMySQLPresenter.ImageURL != "" {
+		updateColumns = append(updateColumns, "image_url")
+	}
+	if userMySQLPresenter.Name != "" {
+		updateColumns = append(updateColumns, "name")
+	}
+	if err := r.db.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "device_hash"}},
+		DoUpdates: clause.AssignmentColumns(updateColumns),
+	}).Create(&userMySQLPresenter).Error; err != nil {
 		return entity.NewID(), nil
 	}
 	return e.ID, nil

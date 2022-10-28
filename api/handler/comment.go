@@ -24,17 +24,17 @@ func ListComment(service comment.UseCase) echo.HandlerFunc {
 		articleID, err := entity.StringToID(articleIDString)
 		if err != nil {
 			log.Infof("パラメータarticle_idの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		comments, err := service.ListComments(articleID)
 		if err != nil {
 			log.Infof("サービスListCommentsが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		commentJson, err := presenter.PickCommentList(comments)
 		if err != nil {
 			log.Infof("PickCommentListが失敗しました: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		responce := presenter.CommentResponce{
 			Data: commentJson,
@@ -50,7 +50,7 @@ func CreateComment(service comment.UseCase) echo.HandlerFunc {
 		articleID, err := entity.StringToID(articleIDString)
 		if err != nil {
 			log.Infof("パラメータarticle_idの形式が間違っています: %v", err)
-			return c.JSON(http.StatusOK, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		message := c.FormValue("message")
 		deviceHash := c.FormValue("devicehash")
@@ -69,7 +69,7 @@ func CreateComment(service comment.UseCase) echo.HandlerFunc {
 		}
 		if _, err := service.CreateComment(comment); err != nil {
 			log.Infof("サービスCreateCommentが失敗しました: %v", err)
-			c.JSON(http.StatusOK, nil)
+			c.JSON(http.StatusBadRequest, nil)
 		}
 		return c.JSON(http.StatusOK, nil)
 	}
