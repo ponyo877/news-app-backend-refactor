@@ -1,7 +1,10 @@
 package entity
 
 import (
+	"fmt"
+	"math/rand"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -53,8 +56,14 @@ func (i *ImageURL) URL() (string, error) {
 	}
 	imageUrl, exist := doc.Find("img").Attr("src")
 	if !exist {
-		return "", ErrNotFound
+		return RandomImage(), nil
 	}
 	i.Value = imageUrl
 	return imageUrl, nil
+}
+
+// RandomImage
+func RandomImage() string {
+	rand.Seed(time.Now().UnixNano())
+	return fmt.Sprintf("https://matome-kun.ga/static/myimage_%d.png", rand.Intn(22)+1)
 }

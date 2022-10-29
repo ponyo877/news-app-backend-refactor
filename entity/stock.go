@@ -27,7 +27,7 @@ func (s Stock) StockLatestArticle() ([]Site, ArticleSet, error) {
 	for _, site := range s.SiteList {
 		feed, err := s.feedParser.ParseURL(site.RSSURL)
 		if err != nil {
-			log.Infof("ParseURLに失敗しました :%v", err)
+			log.Infof("%sのParseURLに失敗しました :%v", site.RSSURL, err)
 			return nil, NewArticleSet(), err
 		}
 		lastUpdatedAt := *feed.Items[0].PublishedParsed //*feed.PublishedParsed
