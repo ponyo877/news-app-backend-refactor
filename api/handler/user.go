@@ -51,7 +51,7 @@ func CreateUser(service user.UseCase) echo.HandlerFunc {
 		avatar, err := c.FormFile("avatar")
 		if err != nil {
 			if !errors.Is(err, http.ErrMissingFile) {
-				log.Infof("パラメータavatarの形式が間違っています: %v", err)
+				log.Infof("パラメータavatar(%s)の形式が間違っています: %v", avatar, err)
 				return c.JSON(http.StatusBadRequest, nil)
 			}
 			if _, err := service.CreateUser(name, entity.NewImage(), deviceHash); err != nil {
