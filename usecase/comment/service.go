@@ -26,7 +26,7 @@ func NewService(r Repository, u user.UseCase) *Service {
 func (s *Service) CreateComment(commnet entity.Comment) (entity.ID, error) {
 	user, err := s.userService.GetUserOption(commnet.DeviceHash)
 	if err != nil {
-		return entity.NewID(), nil
+		return entity.NewID(), err
 	}
 	commnet.UserName = user.Name
 	commnet.AvatarURL = user.AvatarURL

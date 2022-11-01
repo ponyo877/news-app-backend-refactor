@@ -67,7 +67,7 @@ func CreateUser(service user.UseCase) echo.HandlerFunc {
 		}
 		imageByte, err := ioutil.ReadAll(avatarFile)
 		if err != nil {
-			log.Infof("パラメータavatarの形式が間違っています: %v", err)
+			log.Infof("アップロードされたファイル(%s)を読み込むことができません: %v", avatar.Filename, err)
 			return c.JSON(http.StatusBadRequest, nil)
 		}
 		avatarImage := entity.Image{

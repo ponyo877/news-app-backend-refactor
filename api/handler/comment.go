@@ -69,7 +69,7 @@ func CreateComment(service comment.UseCase) echo.HandlerFunc {
 		}
 		if _, err := service.CreateComment(comment); err != nil {
 			log.Infof("サービスCreateCommentが失敗しました: %v", err)
-			c.JSON(http.StatusBadRequest, nil)
+			return c.JSON(http.StatusBadRequest, nil)
 		}
 		return c.JSON(http.StatusOK, nil)
 	}
