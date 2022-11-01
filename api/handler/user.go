@@ -50,7 +50,7 @@ func CreateUser(service user.UseCase) echo.HandlerFunc {
 		avatar, err := c.FormFile("avatar")
 
 		var avatarImage entity.Image
-		if err != nil {
+		if err == nil {
 			avatarFile, err := avatar.Open()
 			if err != nil {
 				log.Infof("アップロードされたファイルが開けません: %v", err)
