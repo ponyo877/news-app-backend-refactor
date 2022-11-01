@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"io/ioutil"
 	"net/http"
 
@@ -49,31 +48,28 @@ func CreateUser(service user.UseCase) echo.HandlerFunc {
 		deviceHash := c.FormValue("devicehash")
 		name := c.FormValue("name")
 		avatar, err := c.FormFile("avatar")
+
+		var avatarImage entity.Image
 		if err != nil {
-			if !errors.Is(err, http.ErrMissingFile) {
-				log.Infof("パラメータavatar(%s)の形式が間違っています: %v", avatar, err)
+			avatarFile, err := avatar.Open()
+			if err != nil {
+				log.Infof("アップロードされたファイルが開けません: %v", err)
 				return c.JSON(http.StatusBadRequest, nil)
 			}
-			if _, err := service.CreateUser(name, entity.NewImage(), deviceHash); err != nil {
-				log.Infof("サービスCreateUserが失敗しました: %v", err)
+			imageByte, err := ioutil.ReadAll(avatarFile)
+			if err != nil {
+				log.Infof("アップロードされたファイル(%v)を読み込むことができません: %v", avatar.Filename, err)
 				return c.JSON(http.StatusBadRequest, nil)
 			}
-			return c.JSON(http.StatusOK, nil)
+			avatarImage = entity.Image{
+				File: imageByte,
+				Name: avatar.Filename,
+			}
+		} else {
+			log.Infof("パラメータavatarが適切に指定されていません: %v", err)
+			avatarImage = entity.Image{}
 		}
-		avatarFile, err := avatar.Open()
-		if err != nil {
-			log.Infof("アップロードされたファイルが開けません: %v", err)
-			return c.JSON(http.StatusBadRequest, nil)
-		}
-		imageByte, err := ioutil.ReadAll(avatarFile)
-		if err != nil {
-			log.Infof("アップロードされたファイル(%s)を読み込むことができません: %v", avatar.Filename, err)
-			return c.JSON(http.StatusBadRequest, nil)
-		}
-		avatarImage := entity.Image{
-			File: imageByte,
-			Name: avatar.Filename,
-		}
+
 		if _, err := service.CreateUser(name, avatarImage, deviceHash); err != nil {
 			log.Infof("サービスCreateUserが失敗しました: %v", err)
 			return c.JSON(http.StatusBadRequest, nil)
