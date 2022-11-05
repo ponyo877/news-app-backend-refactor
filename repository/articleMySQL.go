@@ -88,7 +88,7 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 		Select("articles.*, sites.*").
 		Joins("LEFT JOIN sites ON sites.id = articles.site_id").
 		Where("articles.id = ?", ID.String()).
-		Find(&siteArticleRepositoryPresenter).Error; err != nil {
+		Take(&siteArticleRepositoryPresenter).Error; err != nil {
 		log.Infof("DBの接続に失敗しました: %v", err)
 	}
 	article, err := siteArticleRepositoryPresenter.pickArticle()
