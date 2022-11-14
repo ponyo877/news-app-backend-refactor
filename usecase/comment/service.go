@@ -47,20 +47,12 @@ func (s *Service) GetComment(id entity.ID) (entity.Comment, error) {
 
 // SearchComments search Comment
 func (s *Service) SearchComments(query string) ([]entity.Comment, error) {
-	comments, err := s.repository.Search(strings.ToLower(query))
-	if err != nil {
-		return nil, err
-	}
-	return comments, nil
+	return s.repository.Search(strings.ToLower(query))
 }
 
 // ListComments list Comment
 func (s *Service) ListComments(articleID entity.ID) ([]entity.Comment, error) {
-	comments, err := s.repository.List(articleID)
-	if err != nil {
-		return nil, err
-	}
-	return comments, nil
+	return s.repository.List(articleID)
 }
 
 // DeleteComment Delete a Comment

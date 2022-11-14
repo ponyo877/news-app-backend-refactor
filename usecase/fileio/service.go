@@ -37,9 +37,5 @@ func (s *Service) SaveImage(e entity.Image) (string, error) {
 
 // FetchImage
 func (s *Service) FetchImage(name string) (entity.Image, error) {
-	image, err := s.repo.Download(name)
-	if err != nil {
-		return entity.Image{}, err
-	}
-	return image, nil
+	return s.repo.Download(name)
 }

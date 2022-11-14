@@ -65,20 +65,12 @@ func (s *Service) GetUserOption(deviceHash string) (entity.User, error) {
 
 // SearchUsers search User
 func (s *Service) SearchUsers(query string) ([]entity.User, error) {
-	user, err := s.repository.Search(strings.ToLower(query))
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+	return s.repository.Search(strings.ToLower(query))
 }
 
 // ListUsers list User
 func (s *Service) ListUsers() ([]entity.User, error) {
-	user, err := s.repository.List()
-	if err != nil {
-		return nil, err
-	}
-	return user, nil
+	return s.repository.List()
 }
 
 // DeleteUser Delete a User

@@ -103,7 +103,7 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 }
 
 // ListOption
-func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet) ([]entity.Article, error) {
+func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet, limit int) ([]entity.Article, error) {
 	var siteArticleRepositoryPresenterList SiteArticleRepositoryPresenterList
 
 	newDB := r.db.
@@ -117,6 +117,9 @@ func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet
 	if !invisibleIDSet.IsZero() {
 		newDB = newDB.Where("sites.id NOT IN ?", invisibleIDSet.Strings())
 	}
+	if limit > 0 {
+		newDB = newDB.Limit(limit)
+	}
 	if err := newDB.
 		// Model(&ArticleRepositoryPresenter{}).
 		// Select("articles.*, sites.*").
@@ -124,7 +127,7 @@ func (r *ArticleRepository) ListOption(basePublishedAt time.Time, invisibleIDSet
 		// Where("sites.id NOT IN ?", invisibleIDSet.Strings()).
 		// Where("articles.published_at < ?", basePublishedAt).
 		Order("articles.published_at DESC").
-		Limit(15).
+		// Limit(15).
 		Find(&siteArticleRepositoryPresenterList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		log.Infof("DBの接続に失敗しました: %v", err)
 		return nil, err

@@ -40,6 +40,12 @@ type AppConfig struct {
 	APPort string `mapstructure:"AP_PORT"`
 }
 
+type MLModelConfig struct {
+	MLModelDir  string `mapstructure:"MLM_DIR"`
+	MLModelName string `mapstructure:"MLM_NAME"`
+	MLIndexPath string `mapstructure:"MLM_INDEX_PATH"`
+}
+
 // LoadMysqlConfig
 func LoadMysqlConfig() (MysqlConfig, error) {
 	viper.AutomaticEnv()
@@ -112,5 +118,19 @@ func LoadAppConfig() (AppConfig, error) {
 		return AppConfig{}, err
 	}
 	log.Infof("[App] root: %v, port: %v", config.APRoot, config.APPort)
+	return config, nil
+}
+
+// LoadMLModelConfig
+func LoadMLModelConfig() (MLModelConfig, error) {
+	viper.AutomaticEnv()
+	viper.BindEnv("MLM_DIR")
+	viper.BindEnv("MLM_NAME")
+	viper.BindEnv("MLM_INDEX_PATH")
+	var config MLModelConfig
+	if err := viper.Unmarshal(&config); err != nil {
+		return MLModelConfig{}, err
+	}
+	log.Infof("[MLModel] dir: %v, name: %v, index_path: %v", config.MLModelDir, config.MLModelName, config.MLIndexPath)
 	return config, nil
 }

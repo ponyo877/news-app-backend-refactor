@@ -13,26 +13,13 @@ import (
 
 // MakeBookHandlers make url handlers
 func MakeArticleHandlers(e *echo.Echo, service article.UseCase) {
-	e.GET("/v1/article", ListArticles(service))                             // lastPublishedAt, skipIDs
-	e.GET("/v1/article/view/popular/:period", ListPopularArticles(service)) // kind
-	e.GET("/v1/article/search", ListSearchedArticles(service))              // words
-	e.POST("/v1/article/view/:article_id", IncrementViewCount(service))     // post_id
-	e.GET("/v1/article/recommend", ListRecommendArticle(service))           // ids
-
-	// "/mongo/get?lastpublished=" + lastpublished + "&skipIDs=" + _skipIDs;
-	// "/mongo/ranking/" + type
-	// "/elastic/get?words=" + searchwords
-	// 記事の投稿はバッチ
-	// "/redis/put/"
-	// "/personal?ids=" + ids
-	// "/comment/get?articleID=" + articleID
-	// "/comment/put"
-	// "/site/get"
-	// "/user/put"
-
-	// "/eula/"
-	// "/privacy_policy/"
-	// "/recom/" + postID
+	e.GET("/v1/article", ListArticles(service))
+	e.GET("/v1/article/view/popular/:period", ListPopularArticles(service))
+	e.GET("/v1/article/search", ListSearchedArticles(service))
+	e.POST("/v1/article/view/:article_id", IncrementViewCount(service))
+	e.GET("/v1/article/recommend", ListRecommendArticle(service))
+	e.GET("/v1/article/similar/:article_id", ListSimilarArticle(service))
+	e.GET("/v1/stock/mlindex", UpdateMLIndex(service))
 }
 
 // ListArticles
@@ -50,7 +37,6 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 				return c.JSON(http.StatusBadRequest, nil)
 			}
 		}
-
 		var invisibleIDSet entity.IDSet
 		invisibleSiteIDSetString := c.QueryParam("skipIDs")
 		if invisibleSiteIDSetString == "" {
@@ -63,7 +49,6 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 				return c.JSON(http.StatusBadRequest, nil)
 			}
 		}
-
 		articles, err := service.ListArticles(lastPublishedAt, invisibleIDSet)
 		if err == entity.ErrNotFound {
 			return c.JSON(http.StatusOK, presenter.ArticleResponce{
@@ -179,5 +164,47 @@ func ListRecommendArticle(service article.UseCase) echo.HandlerFunc {
 			Data: articleJson,
 		}
 		return c.JSON(http.StatusOK, responce)
+	}
+}
+
+// ListSimilarArticle
+func ListSimilarArticle(service article.UseCase) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		articleIDString := c.Param("article_id")
+		articleID, err := entity.StringToID(articleIDString)
+		if err != nil {
+			log.Infof("StringToIDが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		articles, err := service.ListSimilarArticles(articleID)
+		if err == entity.ErrNotFound {
+			return c.JSON(http.StatusOK, presenter.ArticleResponce{
+				Data: []*presenter.Article{},
+			})
+		}
+		if err != nil {
+			log.Infof("サービスListSimilarArticlesが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		articleJson, err := presenter.PickArticleList(articles)
+		if err != nil {
+			log.Infof("PickArticleListが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		responce := presenter.ArticleResponce{
+			Data: articleJson,
+		}
+		return c.JSON(http.StatusOK, responce)
+	}
+}
+
+func UpdateMLIndex(service article.UseCase) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		if err := service.UpdateMLIndex(); err != nil {
+			log.Infof("サービスUpdateMLIndexが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		log.Info("サービスUpdateMLIndexが成功しました")
+		return c.JSON(http.StatusOK, nil)
 	}
 }

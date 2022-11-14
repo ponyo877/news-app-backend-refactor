@@ -3,31 +3,12 @@ package repository
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/go-redis/redis/v9"
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 )
-
-// ArticleRedis redis repository
-type ArticleRedis struct {
-	kvs *redis.Client
-}
-
-type ArticleRedisPresenter struct {
-	ID        string
-	ViewCount int
-	Rank      int
-}
-
-type ArticleRedisPresenterList []ArticleRedisPresenter
-
-// NewArticleRedis create new repository
-func NewArticleRedis(kvs *redis.Client) *ArticleRedis {
-	return &ArticleRedis{
-		kvs: kvs,
-	}
-}
 
 // IncrementViewCount
 func (r *ArticleRepository) IncrementViewCount(ID entity.ID) error {
@@ -68,6 +49,38 @@ func (r *ArticleRepository) ListOnlyIDOrderByViewCount(period string) ([]entity.
 		return nil, entity.ErrNotFound
 	}
 	return idList, nil
+}
+
+// SetArticleNumber
+func (r *ArticleRepository) setArticleNumber(articleNumber int, articleID entity.ID, prefix string) error {
+	if err := r.kvs.Set(context.Background(), prefix+":"+strconv.Itoa(articleNumber), articleID.String(), 0).Err(); err != nil {
+		return err
+	}
+	if err := r.kvs.Set(context.Background(), "ml:"+articleID.String(), strconv.Itoa(articleNumber), 0).Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GetArticleNumberByArticleID
+func (r *ArticleRepository) GetArticleNumberByArticleID(articleID entity.ID, prefix string) (int, error) {
+	articleNumberString, err := r.kvs.Get(context.Background(), prefix+":"+articleID.String()).Result()
+	if err == redis.Nil {
+		return 0, entity.ErrNotFound
+	}
+	if err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(articleNumberString)
+}
+
+// GetArticleIDByArticleNumber
+func (r *ArticleRepository) getArticleIDByArticleNumber(articleNumber int, prefix string) (entity.ID, error) {
+	ArticleIDString, err := r.kvs.Get(context.Background(), prefix+":"+strconv.Itoa(articleNumber)).Result()
+	if err != nil {
+		return entity.ID{}, err
+	}
+	return entity.StringToID(ArticleIDString)
 }
 
 // getCurrentZSetKey

@@ -39,11 +39,7 @@ func (s *Service) GetSite(id entity.ID) (entity.Site, error) {
 
 // ListSite list article
 func (s *Service) ListSite() ([]entity.Site, error) {
-	sites, err := s.repo.List()
-	if err != nil {
-		return nil, err
-	}
-	return sites, nil
+	return s.repo.List()
 }
 
 // UpdateSite Update a article

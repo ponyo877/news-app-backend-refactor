@@ -2,7 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"os"
+
+	"github.com/ponyo877/news-app-backend-refactor/pkg/annoyindex"
+
+	"github.com/labstack/gommon/log"
+	"github.com/nlpodyssey/cybertron/pkg/tasks"
+	"github.com/nlpodyssey/cybertron/pkg/tasks/textencoding"
 
 	"github.com/go-redis/redis/v9"
 	"gorm.io/driver/mysql"
@@ -53,38 +59,35 @@ func main() {
 	})
 	defer rdb.Close()
 
-	// ElasticSearchはメモリを使い過ぎるので一旦廃止
-	// elasticSearchConfig, err := config.LoadElasticSearchConfig()
-	// if err != nil {
-	// 	log.Panicf("LoadElasticSearchConfigに失敗しました: %v", err)
-	// }
-	// es, err := elastic.NewClient(
-	// 	elastic.SetURL("http://"+elasticSearchConfig.SESHost+":"+elasticSearchConfig.SEPort),
-	// 	elastic.SetBasicAuth(elasticSearchConfig.SEUser, elasticSearchConfig.SEPassword),
-	// 	elastic.SetSniff(false),
-	// )
-	// if err != nil {
-	// 	log.Panicf("ElasticSearchクライアント作成に失敗しました: %v", err)
-	// }
-
 	webdavConfig, err := config.LoadWebDAVConfig()
 	if err != nil {
 		log.Panicf("LoadWebDAVConfigに失敗しました: %v", err)
 	}
 	nginxEndpoint := fmt.Sprintf("http://%s:%s", webdavConfig.WDSHost, webdavConfig.WDPort)
 
-	// webdav := gowebdav.NewClient(
-	// 	"http://"+webdavConfig.WDSHost+":"+webdavConfig.WDPort,
-	// 	webdavConfig.WDUser,
-	// 	webdavConfig.WDPassword,
-	// )
+	mlmodelConfig, err := config.LoadMLModelConfig()
+	if err != nil {
+		log.Panicf("LoadMLModelConfigに失敗しました: %v", err)
+	}
+	mlmodel, err := tasks.Load[textencoding.Interface](
+		&tasks.Config{
+			ModelsDir: mlmodelConfig.MLModelDir,
+			ModelName: mlmodelConfig.MLModelName,
+		},
+	)
+	defer tasks.Finalize(mlmodel)
+	annindex := annoyindex.NewAnnoyIndexAngular(256)
+	if _, err := os.Stat(mlmodelConfig.MLIndexPath); err == nil {
+		if ok := annindex.Load(mlmodelConfig.MLIndexPath); ok {
+			log.Info("AnnoyIndexの既存モデルの読み込みに成功しました")
+		}
+	}
 
-	articlRepository := repository.NewArticleRepository(gormDB, rdb) //  es)
+	articlRepository := repository.NewArticleRepository(gormDB, rdb, mlmodel, annindex, mlmodelConfig.MLIndexPath)
 	articleService := article.NewService(articlRepository)
 	siteRepository := repository.NewSiteMySQL(gormDB)
 	userRepository := repository.NewUserMySQL(gormDB)
 	commentRepository := repository.NewCommentMySQL(gormDB)
-	// imageRepository := repository.NewImageWebDAV(webdav)
 	imageRepository := repository.NewImageNginx(nginxEndpoint)
 	siteService := site.NewService(siteRepository)
 	stockService := stock.NewService(articleService, siteService)
