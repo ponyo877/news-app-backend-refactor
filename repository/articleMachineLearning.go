@@ -9,10 +9,8 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/pkg/annoyindex"
 )
 
-type Vector = []float32
-
-// Vectorize
-func (r *ArticleRepository) vectorize(title string) (Vector, error) {
+// vectorize
+func (r *ArticleRepository) vectorize(title string) ([]float32, error) {
 	result, err := r.model.Encode(context.Background(), title, int(bert.MeanPooling))
 	if err != nil {
 		return nil, err
@@ -20,7 +18,7 @@ func (r *ArticleRepository) vectorize(title string) (Vector, error) {
 	return result.Vector.Data().F32(), nil
 }
 
-// AddArticles
+// CreateMLIndex
 func (r *ArticleRepository) CreateMLIndex(articles []entity.Article) error {
 	newMLIndex := annoyindex.NewAnnoyIndexAngular(256)
 	for articleNumber, article := range articles {
@@ -46,6 +44,7 @@ func (r *ArticleRepository) CreateMLIndex(articles []entity.Article) error {
 // ListBySimilarity
 func (r *ArticleRepository) ListBySimilarity(ID entity.ID) ([]entity.ID, error) {
 	var similarArticleNumbers []int
+	var distances []float32
 	targetArticleNumber, err := r.GetArticleNumberByArticleID(ID, "ml")
 	if err != nil && err != entity.ErrNotFound {
 		return nil, err
@@ -60,14 +59,17 @@ func (r *ArticleRepository) ListBySimilarity(ID entity.ID) ([]entity.ID, error) 
 		if err != nil {
 			return nil, err
 		}
-		r.index.GetNnsByVector(articleTitleVector, 15, -1, &similarArticleNumbers)
+		r.index.GetNnsByVector(articleTitleVector, 15, -1, &similarArticleNumbers, &distances)
 	} else {
 		log.Infof("articleID: %v, targetArticleNumber: %v", ID.String(), targetArticleNumber)
-		r.index.GetNnsByItem(targetArticleNumber, 15, -1, &similarArticleNumbers)
+		r.index.GetNnsByItem(targetArticleNumber, 15, -1, &similarArticleNumbers, &distances)
 	}
-
 	var idList []entity.ID
-	for _, articleNumber := range similarArticleNumbers {
+	for i, articleNumber := range similarArticleNumbers {
+		// 似過ぎている記事は除外
+		if distances[i] < 0.1 {
+			continue
+		}
 		articleID, err := r.getArticleIDByArticleNumber(articleNumber, "ml")
 		if err != nil {
 			return nil, err
