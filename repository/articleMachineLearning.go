@@ -3,7 +3,6 @@ package repository
 import (
 	"context"
 
-	"github.com/labstack/gommon/log"
 	"github.com/nlpodyssey/cybertron/pkg/models/bert"
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 	"github.com/ponyo877/news-app-backend-refactor/pkg/annoyindex"
@@ -45,25 +44,15 @@ func (r *ArticleRepository) CreateMLIndex(articles []entity.Article) error {
 func (r *ArticleRepository) ListBySimilarity(ID entity.ID) ([]entity.ID, error) {
 	var similarArticleNumbers []int
 	var distances []float32
-	targetArticleNumber, err := r.GetArticleNumberByArticleID(ID, "ml")
-	if err != nil && err != entity.ErrNotFound {
+	article, err := r.Get(ID)
+	if err != nil {
 		return nil, err
 	}
-	// まだMLIndexに登録されてない場合はタイトルベクトルから計算する
-	if err == entity.ErrNotFound {
-		article, err := r.Get(ID)
-		if err != nil {
-			return nil, err
-		}
-		articleTitleVector, err := r.vectorize(article.Title.String())
-		if err != nil {
-			return nil, err
-		}
-		r.index.GetNnsByVector(articleTitleVector, 15, -1, &similarArticleNumbers, &distances)
-	} else {
-		log.Infof("articleID: %v, targetArticleNumber: %v", ID.String(), targetArticleNumber)
-		r.index.GetNnsByItem(targetArticleNumber, 15, -1, &similarArticleNumbers, &distances)
+	articleTitleVector, err := r.vectorize(article.Title.String())
+	if err != nil {
+		return nil, err
 	}
+	r.index.GetNnsByVector(articleTitleVector, 15, -1, &similarArticleNumbers, &distances)
 	var idList []entity.ID
 	for i, articleNumber := range similarArticleNumbers {
 		// 似過ぎている記事は除外

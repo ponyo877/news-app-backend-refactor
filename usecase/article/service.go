@@ -81,21 +81,10 @@ func (s *Service) ListSimilarArticles(ID entity.ID) ([]entity.Article, error) {
 }
 
 func (s *Service) UpdateMLIndex() error {
-	targetArticles, err := s.repository.ListOption(time.Time{}, entity.NewIDSet(), -1)
+	targetArticles, err := s.repository.ListOption(time.Time{}, entity.NewIDSet(), 100)
 	if err != nil {
 		return err
 	}
-	// var updateTargetArticles []entity.Article
-	// targetCount := 0 // 動作確認用
-	// for _, article := range targetArticles {
-	// 	_, err = s.repository.GetArticleNumberByArticleID(article.ID, "ml")
-	// 	if err == entity.ErrNotFound {
-	// 		targetCount++
-	// 		updateTargetArticles = append(updateTargetArticles, article)
-	// 	} else if err != nil {
-	// 		return err
-	// 	}
-	// }
 	log.Infof("UpdateMLIndexで %v 個の記事がMLIndexに登録されます", len(targetArticles))
 	return s.repository.CreateMLIndex(targetArticles)
 }

@@ -15,7 +15,7 @@ type Reader interface {
 	ListOption(basePublishedAt time.Time, invisibleIDSet entity.IDSet, limit int) ([]entity.Article, error)
 	ListOnlyIDOrderByViewCount(period string) ([]entity.ID, error)
 	ListBySimilarity(ID entity.ID) ([]entity.ID, error)
-	GetArticleNumberByArticleID(articleID entity.ID, prefix string) (int, error)
+	// GetArticleNumberByArticleID(articleID entity.ID, prefix string) (int, error)
 }
 
 // Writer interface

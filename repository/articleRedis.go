@@ -56,9 +56,9 @@ func (r *ArticleRepository) setArticleNumber(articleNumber int, articleID entity
 	if err := r.kvs.Set(context.Background(), prefix+":"+strconv.Itoa(articleNumber), articleID.String(), 0).Err(); err != nil {
 		return err
 	}
-	if err := r.kvs.Set(context.Background(), "ml:"+articleID.String(), strconv.Itoa(articleNumber), 0).Err(); err != nil {
-		return err
-	}
+	// if err := r.kvs.Set(context.Background(), prefix+":"+articleID.String(), strconv.Itoa(articleNumber), 0).Err(); err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
