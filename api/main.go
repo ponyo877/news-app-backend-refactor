@@ -100,6 +100,7 @@ func main() {
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
 
+	handler.MakeHealthHandlers(e, db)
 	handler.MakeArticleHandlers(e, articleService)
 	handler.MakeStockHandlers(e, stockService)
 	handler.MakeSiteHandlers(e, siteService)
