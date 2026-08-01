@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"
+	xmlns:content="http://purl.org/rss/1.0/modules/content/"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:atom="http://www.w3.org/2005/Atom"
+	>
+<channel>
+	<title>WordPressテストブログ</title>
+	<atom:link href="https://wp.example.com/feed" rel="self" type="application/rss+xml" />
+	<link>https://wp.example.com</link>
+	<description>WordPress RSS 2.0 形式のテストフィード(content:encodedなし)</description>
+	<language>ja</language>
+	<item>
+		<title>WordPress記事その2</title>
+		<link>https://wp.example.com/archives/post-2.html</link>
+		<dc:creator><![CDATA[example]]></dc:creator>
+		<pubDate>Sat, 01 Aug 2026 04:34:20 +0000</pubDate>
+		<guid isPermaLink="false">https://wp.example.com/?p=2</guid>
+		<description><![CDATA[概要のみで画像を含まない記事 [&#8230;]]]></description>
+	</item>
+	<item>
+		<title>WordPress記事その1</title>
+		<link>https://wp.example.com/archives/post-1.html</link>
+		<dc:creator><![CDATA[example]]></dc:creator>
+		<pubDate>Fri, 31 Jul 2026 12:00:00 +0000</pubDate>
+		<guid isPermaLink="false">https://wp.example.com/?p=1</guid>
+		<description><![CDATA[説明文に画像がある記事 <img src="https://wp.example.com/wp-content/uploads/1.jpg" />]]></description>
+	</item>
+</channel>
+</rss>

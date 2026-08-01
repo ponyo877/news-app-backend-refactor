@@ -23,9 +23,10 @@ func NewArticleSet() ArticleSet {
 }
 
 // Add
+// 同一サイト×同一タイトルの記事を重複排除する(記事自身のIDは毎回採番されるためキーにならない)
 func (a ArticleSet) Add(article Article) ArticleSet {
 	articleSiteAndTitle := ArticleSiteAndTitle{
-		ID:    article.ID,
+		ID:    article.Site.ID,
 		Title: article.Title,
 	}
 	if a.CheckSet.Contains(articleSiteAndTitle) {

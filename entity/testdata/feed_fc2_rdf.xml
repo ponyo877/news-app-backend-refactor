@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns="http://purl.org/rss/1.0/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xml:lang="ja">
+  <channel rdf:about="http://fc2.example.com/">
+    <title>FC2テストブログ</title>
+    <link>http://fc2.example.com/</link>
+    <description>FC2 (?xml) 形式のテストフィード</description>
+    <dc:language>ja</dc:language>
+    <items>
+      <rdf:Seq>
+        <rdf:li rdf:resource="http://fc2.example.com/blog-entry-2.html"/>
+        <rdf:li rdf:resource="http://fc2.example.com/blog-entry-1.html"/>
+      </rdf:Seq>
+    </items>
+  </channel>
+  <item rdf:about="http://fc2.example.com/blog-entry-2.html">
+    <link>http://fc2.example.com/blog-entry-2.html</link>
+    <title>FC2記事その2</title>
+    <description>FC2の説明文2</description>
+    <content:encoded><![CDATA[<dl class="thread"><dt>1 ：本文</dt><dd><a href="https://blog-imgs.example.com/entry_img_2.jpg"><img border="0" alt="" src="https://blog-imgs.example.com/entry_img_2.jpg" width="154" height="154"></a></dd></dl>]]></content:encoded>
+    <dc:date>2026-08-01T12:40:49+09:00</dc:date>
+  </item>
+  <item rdf:about="http://fc2.example.com/blog-entry-1.html">
+    <link>http://fc2.example.com/blog-entry-1.html</link>
+    <title>FC2記事その1</title>
+    <description>FC2の説明文1</description>
+    <content:encoded><![CDATA[<p>画像なし本文</p>]]></content:encoded>
+    <dc:date>2026-08-01T08:00:33+09:00</dc:date>
+  </item>
+</rdf:RDF>
