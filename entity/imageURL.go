@@ -65,5 +65,5 @@ func (i *ImageURL) URL() (string, error) {
 // RandomImage
 func RandomImage() string {
 	rand.Seed(time.Now().UnixNano())
-	return fmt.Sprintf("https://matome-kun.ga/static/myimage_%d.png", rand.Intn(22)+1)
+	return fmt.Sprintf("https://matome.folks-chat.com/static/myimage_%d.png", rand.Intn(22)+1)
 }

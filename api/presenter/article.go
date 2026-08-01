@@ -45,7 +45,6 @@ func pickArticle(article entity.Article) (Article, error) {
 func PickArticleList(articleList []entity.Article) (ArticleList, error) {
 	var articlePresenterList ArticleList
 	for _, article := range articleList {
-		var articlePresenter Article
 		articlePresenter, err := pickArticle(article)
 		if err != nil {
 			return ArticleList{}, err
