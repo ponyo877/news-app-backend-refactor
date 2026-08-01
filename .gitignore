@@ -17,3 +17,5 @@
 models/
 
 matome.ann
+scripts/seed-sites/insert-sites.sql
+
