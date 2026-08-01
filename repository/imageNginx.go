@@ -2,6 +2,8 @@ package repository
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"path/filepath"
@@ -24,8 +26,27 @@ func NewImageNginx(endpoint string) *ImageNginx {
 }
 
 // Download
+// 従来は未実装スタブで、GET /v1/static/:filename が常に0バイトを返していた。
+// nginx(WebDAV)の /static から実体を取得して返す
 func (r *ImageNginx) Download(filename string) (entity.Image, error) {
-	return entity.Image{}, nil
+	webdavURL, err := url.Parse(r.endpoint)
+	if err != nil {
+		return entity.Image{}, err
+	}
+	webdavURL.Path = filepath.Join(webdavURL.Path, r.dir, filename)
+	res, err := http.Get(webdavURL.String())
+	if err != nil {
+		return entity.Image{}, err
+	}
+	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return entity.Image{}, fmt.Errorf("静的ファイルの取得に失敗しました: HTTP %d", res.StatusCode)
+	}
+	file, err := io.ReadAll(res.Body)
+	if err != nil {
+		return entity.Image{}, err
+	}
+	return entity.Image{Name: filename, File: file}, nil
 }
 
 // Upload

@@ -237,7 +237,8 @@ func uploadIcon(api string, site seedSite, iconURL string) (string, error) {
 	if res.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("HTTP %d", res.StatusCode)
 	}
-	return api + "/v1/static/" + filename, nil
+	// ダウンロードはnginx直配信の/staticを使う(/v1/staticはappを経由するため)
+	return api + "/static/" + filename, nil
 }
 
 // ホスト名ベースの一意なASCIIファイル名(例: site-icon-blog-livedoor-jp-itsoku.png)
