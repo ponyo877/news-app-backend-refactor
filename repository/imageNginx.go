@@ -61,8 +61,15 @@ func (r *ImageNginx) Upload(e entity.Image) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if _, err := http.DefaultClient.Do(req); err != nil {
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
 		return "", err
+	}
+	defer res.Body.Close()
+	// 2xx以外は失敗として扱う。従来はステータス未確認のため、
+	// nginx側でPermission denied等でも200を返してしまっていた
+	if res.StatusCode < 200 || res.StatusCode >= 300 {
+		return "", fmt.Errorf("静的ファイルのアップロードに失敗しました: HTTP %d", res.StatusCode)
 	}
 	return filepath.Join(r.dir, e.FileName()), nil
 }
