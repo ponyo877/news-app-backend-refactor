@@ -12,14 +12,15 @@ import (
 )
 
 // MakeBookHandlers make url handlers
-func MakeArticleHandlers(e *echo.Echo, service article.UseCase) {
+func MakeArticleHandlers(e *echo.Echo, service article.UseCase, cronGuard echo.MiddlewareFunc) {
 	e.GET("/v1/article", ListArticles(service))
 	e.GET("/v1/article/view/popular/:period", ListPopularArticles(service))
 	e.GET("/v1/article/search", ListSearchedArticles(service))
 	e.POST("/v1/article/view/:article_id", IncrementViewCount(service))
 	e.GET("/v1/article/recommend", ListRecommendArticle(service))
 	e.GET("/v1/article/similar/:article_id", ListSimilarArticle(service))
-	e.GET("/v1/stock/mlindex", UpdateMLIndex(service))
+	// BERT索引の再構築は重い処理のため外部から起動されないよう保護する
+	e.GET("/v1/stock/mlindex", UpdateMLIndex(service), cronGuard)
 }
 
 // ListArticles
@@ -50,14 +51,16 @@ func ListArticles(service article.UseCase) echo.HandlerFunc {
 			}
 		}
 		articles, err := service.ListArticles(lastPublishedAt, invisibleIDSet)
-		if err == entity.ErrNotFound {
+		if err != nil && err != entity.ErrNotFound {
+			log.Infof("サービスListArticlesが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		// ページ終端(結果0件)はlastPublishedAtなしの200を返す。
+		// 旧実装は articles[len-1] が範囲外パニックになり、無限スクロールの終端で必ず500を返していた
+		if len(articles) == 0 {
 			return c.JSON(http.StatusOK, presenter.ArticleResponce{
 				Data: []*presenter.Article{},
 			})
-		}
-		if err != nil {
-			log.Infof("サービスListArticlesが失敗しました: %v", err)
-			return c.JSON(http.StatusBadRequest, nil)
 		}
 		articleJson, err := presenter.PickArticleList(articles)
 		if err != nil {

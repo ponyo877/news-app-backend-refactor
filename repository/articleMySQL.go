@@ -89,12 +89,13 @@ func (r *ArticleRepository) Get(ID entity.ID) (entity.Article, error) {
 		Joins("LEFT JOIN sites ON sites.id = articles.site_id").
 		Where("articles.id = ?", ID.String()).
 		Take(&siteArticleRepositoryPresenter).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.Article{}, entity.ErrNotFound
+		}
 		log.Infof("DBの接続に失敗しました: %v", err)
+		return entity.Article{}, err
 	}
 	article, err := siteArticleRepositoryPresenter.pickArticle()
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return entity.Article{}, entity.ErrNotFound
-	}
 	if err != nil {
 		log.Infof("pickArticleに失敗しました: %v", err)
 		return entity.Article{}, err
@@ -183,11 +184,13 @@ func (r *ArticleRepository) List(IDList []entity.ID) ([]entity.Article, error) {
 	var articleList []entity.Article
 	for _, ID := range IDList {
 		article, err := r.Get(ID)
-		if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		// 削除・重複整理済みの記事IDがランキング(Redis)に残っていてもスキップして継続する
+		if errors.Is(err, entity.ErrNotFound) {
+			continue
+		}
+		if err != nil {
 			log.Infof("Getが失敗しました: %v", err)
 			return nil, err
-		} else if errors.Is(err, gorm.ErrRecordNotFound) {
-			continue
 		}
 		articleList = append(articleList, article)
 	}
@@ -197,15 +200,20 @@ func (r *ArticleRepository) List(IDList []entity.ID) ([]entity.Article, error) {
 	return articleList, nil
 }
 
+// SearchOnlyID はタイトルの全文検索(ヒットした記事の新着順・上位30件)。
+// 旧実装はLIMITなし・スコア順のみで、ヒット全件(数千件・数MB)を返して20秒超かかっていた。
+// MATCHをWHERE句に置くことでFULLTEXTインデックスが絞り込みに使われる。
 func (r *ArticleRepository) SearchOnlyID(keyword entity.Keyword) ([]entity.Article, error) {
 	var siteArticleRepositoryPresenterList SiteArticleRepositoryPresenterList
-	query := "SELECT articles.*, sites.*, MATCH(articles.title) AGAINST(? IN BOOLEAN MODE) AS score " +
+	query := "SELECT articles.*, sites.* " +
 		"FROM articles LEFT JOIN sites ON sites.id = articles.site_id " +
-		"HAVING score > 0 ORDER BY score DESC"
+		"WHERE MATCH(articles.title) AGAINST(? IN BOOLEAN MODE) " +
+		"ORDER BY articles.published_at DESC LIMIT 30"
 
 	if err := r.db.Raw(query, keyword.QueryArg()).
-		Scan(&siteArticleRepositoryPresenterList).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		Scan(&siteArticleRepositoryPresenterList).Error; err != nil {
 		log.Infof("DBの接続に失敗しました: %v", err)
+		return nil, err
 	}
 	articleList, err := siteArticleRepositoryPresenterList.pickArticleList()
 	if err != nil {
