@@ -10,6 +10,9 @@ import (
 
 // vectorize
 func (r *ArticleRepository) vectorize(title string) ([]float32, error) {
+	if r.model == nil {
+		return nil, entity.ErrNotFound
+	}
 	result, err := r.model.Encode(context.Background(), title, int(bert.MeanPooling))
 	if err != nil {
 		return nil, err
@@ -19,6 +22,10 @@ func (r *ArticleRepository) vectorize(title string) ([]float32, error) {
 
 // CreateMLIndex
 func (r *ArticleRepository) CreateMLIndex(articles []entity.Article) error {
+	// ML無効構成(MLM_NAME未設定)では索引を作らない
+	if r.model == nil || r.index == nil {
+		return entity.ErrNotFound
+	}
 	newMLIndex := annoyindex.NewAnnoyIndexAngular(256)
 	for articleNumber, article := range articles {
 		articleTitleVector, err := r.vectorize(article.Title.String())
@@ -42,6 +49,10 @@ func (r *ArticleRepository) CreateMLIndex(articles []entity.Article) error {
 
 // ListBySimilarity
 func (r *ArticleRepository) ListBySimilarity(ID entity.ID) ([]entity.ID, error) {
+	// ML無効構成(MLM_NAME未設定)では類似記事なし=空リストとして扱う
+	if r.model == nil || r.index == nil {
+		return nil, entity.ErrNotFound
+	}
 	var similarArticleNumbers []int
 	var distances []float32
 	article, err := r.Get(ID)

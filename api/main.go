@@ -69,18 +69,30 @@ func main() {
 	if err != nil {
 		log.Panicf("LoadMLModelConfigに失敗しました: %v", err)
 	}
-	mlmodel, err := tasks.Load[textencoding.Interface](
-		&tasks.Config{
-			ModelsDir: mlmodelConfig.MLModelDir,
-			ModelName: mlmodelConfig.MLModelName,
-		},
-	)
-	defer tasks.Finalize(mlmodel)
-	annindex := annoyindex.NewAnnoyIndexAngular(256)
-	if _, err := os.Stat(mlmodelConfig.MLIndexPath); err == nil {
-		if ok := annindex.Load(mlmodelConfig.MLIndexPath); ok {
-			log.Info("AnnoyIndexの既存モデルの読み込みに成功しました")
+	// BERTモデルは数百MBを常駐させメモリ1GB級のVMでは致命的なため、
+	// MLM_NAME未設定時は読み込まない(類似記事APIは空配列・mlindexは無効になる)
+	var mlmodel textencoding.Interface
+	var annindex annoyindex.AnnoyIndex
+	if mlmodelConfig.MLModelName != "" {
+		mlmodel, err = tasks.Load[textencoding.Interface](
+			&tasks.Config{
+				ModelsDir: mlmodelConfig.MLModelDir,
+				ModelName: mlmodelConfig.MLModelName,
+			},
+		)
+		if err != nil {
+			log.Panicf("BERTモデルの読み込みに失敗しました: %v", err)
 		}
+		defer tasks.Finalize(mlmodel)
+		angularIndex := annoyindex.NewAnnoyIndexAngular(256)
+		if _, err := os.Stat(mlmodelConfig.MLIndexPath); err == nil {
+			if ok := angularIndex.Load(mlmodelConfig.MLIndexPath); ok {
+				log.Info("AnnoyIndexの既存モデルの読み込みに成功しました")
+			}
+		}
+		annindex = angularIndex
+	} else {
+		log.Info("MLM_NAME未設定のためBERT/類似記事機能を無効化して起動します")
 	}
 
 	articlRepository := repository.NewArticleRepository(gormDB, rdb, mlmodel, annindex, mlmodelConfig.MLIndexPath)
