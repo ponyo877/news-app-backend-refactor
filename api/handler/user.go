@@ -6,40 +6,15 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/gommon/log"
-	"github.com/ponyo877/news-app-backend-refactor/api/presenter"
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 	"github.com/ponyo877/news-app-backend-refactor/usecase/user"
 )
 
 // MakeUserHandlers
+// GET /v1/user は全ユーザーのdevicehash(コメントの本人判定に使う値)を無認証で
+// 公開していたため閉鎖した。アプリはPOSTしか使っていない
 func MakeUserHandlers(e *echo.Echo, service user.UseCase) {
-	e.GET("/v1/user", ListUsers(service))
 	e.POST("/v1/user", CreateUser(service)) // name, devicehash, avatarURL
-}
-
-// ListUsers
-func ListUsers(service user.UseCase) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		users, err := service.ListUsers()
-		if err == entity.ErrNotFound {
-			return c.JSON(http.StatusOK, presenter.UserResponce{
-				Data: []*presenter.User{},
-			})
-		}
-		if err != nil {
-			log.Infof("サービスListUserが失敗しました: %v", err)
-			return c.JSON(http.StatusBadRequest, nil)
-		}
-		userJson, err := presenter.PickUserList(users)
-		if err != nil {
-			log.Infof("PickUserListが失敗しました: %v", err)
-			return c.JSON(http.StatusBadRequest, nil)
-		}
-		responce := presenter.UserResponce{
-			Data: userJson,
-		}
-		return c.JSON(http.StatusOK, responce)
-	}
 }
 
 // CreateUser

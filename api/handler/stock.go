@@ -9,8 +9,8 @@ import (
 )
 
 // MakeStockHandlers
-func MakeStockHandlers(e *echo.Echo, service stock.UseCase) {
-	e.GET("/v1/stock", StockLatestArticle(service)) // 全サイトの情報を得る
+func MakeStockHandlers(e *echo.Echo, service stock.UseCase, cronGuard echo.MiddlewareFunc) {
+	e.GET("/v1/stock", StockLatestArticle(service), cronGuard) // 全サイトの情報を得る(systemdタイマー専用)
 }
 
 // StockLatestArticle

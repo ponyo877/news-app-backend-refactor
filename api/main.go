@@ -95,14 +95,22 @@ func main() {
 	userService := user.NewService(userRepository, fileioService)
 	commentService := comment.NewService(commentRepository, userService)
 
+	cronConfig, err := config.LoadCronConfig()
+	if err != nil {
+		log.Panicf("LoadCronConfigに失敗しました: %v", err)
+	}
+
 	e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
+	// 読み取り系APIをCloudflare/端末にキャッシュさせる(単一VMのMySQL直撃を避ける)
+	e.Use(handler.CacheControl)
 
+	cronGuard := handler.CronGuard(cronConfig.CronToken)
 	handler.MakeHealthHandlers(e, db)
-	handler.MakeArticleHandlers(e, articleService)
-	handler.MakeStockHandlers(e, stockService)
+	handler.MakeArticleHandlers(e, articleService, cronGuard)
+	handler.MakeStockHandlers(e, stockService, cronGuard)
 	handler.MakeSiteHandlers(e, siteService)
 	handler.MakeUserHandlers(e, userService)
 	handler.MakeImageHandlers(e, fileioService)

@@ -46,6 +46,10 @@ type MLModelConfig struct {
 	MLIndexPath string `mapstructure:"MLM_INDEX_PATH"`
 }
 
+type CronConfig struct {
+	CronToken string `mapstructure:"CRON_TOKEN"`
+}
+
 // LoadMysqlConfig
 func LoadMysqlConfig() (MysqlConfig, error) {
 	viper.AutomaticEnv()
@@ -118,6 +122,19 @@ func LoadAppConfig() (AppConfig, error) {
 		return AppConfig{}, err
 	}
 	log.Infof("[App] root: %v, port: %v", config.APRoot, config.APPort)
+	return config, nil
+}
+
+// LoadCronConfig は内部バッチ用エンドポイント(/v1/stock 系)保護の共有シークレットを読む。
+// 秘匿情報のため値そのものはログに出さない
+func LoadCronConfig() (CronConfig, error) {
+	viper.AutomaticEnv()
+	viper.BindEnv("CRON_TOKEN")
+	var config CronConfig
+	if err := viper.Unmarshal(&config); err != nil {
+		return CronConfig{}, err
+	}
+	log.Infof("[Cron] token set: %v", config.CronToken != "")
 	return config, nil
 }
 

@@ -39,14 +39,16 @@ func (s *Service) StockLatestArticle() error {
 	}
 	for _, site := range newSiteList {
 		if err := s.siteService.UpdateSite(site); err != nil {
-			log.Infof("サービスUpdateSiteに失敗しました: %v", err)
-			return err
+			// 1サイトの更新失敗で他サイトの取り込みを止めない
+			log.Infof("サービスUpdateSiteに失敗しました(スキップして継続): site=%v, err=%v", site.Title, err)
+			continue
 		}
 	}
 	for _, article := range newArticleSet.Set {
 		if err := s.articleService.CreateArticle(article); err != nil {
-			log.Infof("サービスCreateArticleに失敗しました: %v", err)
-			return err
+			// 1記事のINSERT失敗(カラム長超過など)で同サイクルの残り記事を捨てない
+			log.Infof("サービスCreateArticleに失敗しました(スキップして継続): title=%v, err=%v", article.Title.String(), err)
+			continue
 		}
 	}
 	return nil
