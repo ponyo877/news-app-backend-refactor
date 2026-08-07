@@ -9,15 +9,23 @@ import (
 	"github.com/labstack/gommon/log"
 )
 
-// CacheControl は読み取り系GETにCache-Controlを付与し、Cloudflare・端末側にキャッシュさせる。
+// CacheControl は読み取り系GETにCache-Controlを付与し、Cloudflareエッジにのみキャッシュさせる。
 // 全リクエストが単一VMのMySQLに直撃する構造を避けるための前提。
-// 注意: CloudflareはJSONを既定ではキャッシュしないため、ダッシュボードで
-// 「パス /v1/* を Eligible for cache(Origin Cache Control尊重)」のCache Ruleを作成すること。
+//
+// max-age=0 + s-maxage の組み合わせが重要:
+//   - s-maxage: Cloudflareエッジのキャッシュ時間(オリジン保護)
+//   - max-age=0: 端末側(iOSのNSURLCache等)にはキャッシュさせない。
+//     max-ageを正の値にすると、アプリの新着リストが端末内キャッシュで数分〜数時間止まって見える
+//
+// 注意: Cloudflareダッシュボード側の前提設定が2つある
+//  1. Cache Rule「パス /v1/* を Eligible for cache(Origin Cache Control尊重)」
+//  2. Caching → Configuration → Browser Cache TTL を「既存のヘッダーを尊重する」
+//     (既定の4時間のままだと max-age が14400に書き換えられ、端末キャッシュが発生する)
 func CacheControl(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		if c.Request().Method == http.MethodGet {
 			if maxAge := cacheMaxAge(c.Request().URL.Path); maxAge > 0 {
-				c.Response().Header().Set("Cache-Control", fmt.Sprintf("public, max-age=%d", maxAge))
+				c.Response().Header().Set("Cache-Control", fmt.Sprintf("public, max-age=0, s-maxage=%d", maxAge))
 			}
 		}
 		return next(c)
