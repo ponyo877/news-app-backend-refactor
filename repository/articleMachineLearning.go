@@ -5,7 +5,6 @@ import (
 
 	"github.com/nlpodyssey/cybertron/pkg/models/bert"
 	"github.com/ponyo877/news-app-backend-refactor/entity"
-	"github.com/ponyo877/news-app-backend-refactor/pkg/annoyindex"
 )
 
 // vectorize
@@ -22,11 +21,11 @@ func (r *ArticleRepository) vectorize(title string) ([]float32, error) {
 
 // CreateMLIndex
 func (r *ArticleRepository) CreateMLIndex(articles []entity.Article) error {
-	// ML無効構成(MLM_NAME未設定)では索引を作らない
-	if r.model == nil || r.index == nil {
+	// ML無効構成(MLM_NAME未設定 or mlindexタグなしビルド)では索引を作らない
+	if r.model == nil || r.index == nil || newVectorIndex == nil {
 		return entity.ErrNotFound
 	}
-	newMLIndex := annoyindex.NewAnnoyIndexAngular(256)
+	newMLIndex := newVectorIndex()
 	for articleNumber, article := range articles {
 		articleTitleVector, err := r.vectorize(article.Title.String())
 		if err != nil {

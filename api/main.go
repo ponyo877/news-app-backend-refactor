@@ -2,9 +2,6 @@ package main
 
 import (
 	"fmt"
-	"os"
-
-	"github.com/ponyo877/news-app-backend-refactor/pkg/annoyindex"
 
 	"github.com/labstack/gommon/log"
 	"github.com/nlpodyssey/cybertron/pkg/tasks"
@@ -70,9 +67,10 @@ func main() {
 		log.Panicf("LoadMLModelConfigに失敗しました: %v", err)
 	}
 	// BERTモデルは数百MBを常駐させメモリ1GB級のVMでは致命的なため、
-	// MLM_NAME未設定時は読み込まない(類似記事APIは空配列・mlindexは無効になる)
+	// MLM_NAME未設定時は読み込まない(類似記事APIは空配列・mlindexは無効になる)。
+	// annoyindex(cgo)はビルドタグ mlindex のときだけリンクされる(mlindex_*.go)
 	var mlmodel textencoding.Interface
-	var annindex annoyindex.AnnoyIndex
+	var annindex repository.VectorIndex
 	if mlmodelConfig.MLModelName != "" {
 		mlmodel, err = tasks.Load[textencoding.Interface](
 			&tasks.Config{
@@ -84,13 +82,7 @@ func main() {
 			log.Panicf("BERTモデルの読み込みに失敗しました: %v", err)
 		}
 		defer tasks.Finalize(mlmodel)
-		angularIndex := annoyindex.NewAnnoyIndexAngular(256)
-		if _, err := os.Stat(mlmodelConfig.MLIndexPath); err == nil {
-			if ok := angularIndex.Load(mlmodelConfig.MLIndexPath); ok {
-				log.Info("AnnoyIndexの既存モデルの読み込みに成功しました")
-			}
-		}
-		annindex = angularIndex
+		annindex = loadVectorIndex(mlmodelConfig.MLIndexPath)
 	} else {
 		log.Info("MLM_NAME未設定のためBERT/類似記事機能を無効化して起動します")
 	}
