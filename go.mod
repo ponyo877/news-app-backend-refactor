@@ -1,6 +1,6 @@
 module github.com/ponyo877/news-app-backend-refactor
 
-go 1.18
+go 1.26
 
 require (
 	github.com/PuerkitoBio/goquery v1.5.1
