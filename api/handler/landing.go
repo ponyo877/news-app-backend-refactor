@@ -33,8 +33,11 @@ type landingView struct {
 }
 
 // MakeLandingHandlers
+// HEADも受ける(一部のリンクプレビューボットはGETの前にHEADを打つ)
 func MakeLandingHandlers(e *echo.Echo, service article.UseCase, apRoot string) {
-	e.GET("/a/:article_id", ShowArticleLanding(service, apRoot))
+	landing := ShowArticleLanding(service, apRoot)
+	e.GET("/a/:article_id", landing)
+	e.HEAD("/a/:article_id", landing)
 }
 
 // ShowArticleLanding 共有URLの着地ページ。
