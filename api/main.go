@@ -100,7 +100,7 @@ func main() {
 	userService := user.NewService(userRepository, fileioService)
 	commentService := comment.NewService(commentRepository, userService)
 	deviceTokenRepository := repository.NewDeviceTokenMySQL(gormDB)
-	notificationService := notification.NewService(deviceTokenRepository, repository.NewPushExpo(), articleService)
+	notificationService := notification.NewService(deviceTokenRepository, repository.NewDigestLogMySQL(gormDB), repository.NewPushExpo(), articleService)
 
 	cronConfig, err := config.LoadCronConfig()
 	if err != nil {

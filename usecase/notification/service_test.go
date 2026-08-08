@@ -28,6 +28,22 @@ func (f *fakeRepository) Delete(expoToken string) error {
 	return nil
 }
 
+type fakeDigestLog struct {
+	recentArticleIDs []string
+	savedArticleIDs  []string
+	savedSentCounts  []int
+}
+
+func (f *fakeDigestLog) Save(articleID entity.ID, sentCount int) error {
+	f.savedArticleIDs = append(f.savedArticleIDs, articleID.String())
+	f.savedSentCounts = append(f.savedSentCounts, sentCount)
+	return nil
+}
+
+func (f *fakeDigestLog) ListRecentArticleIDs(since time.Time) ([]string, error) {
+	return f.recentArticleIDs, nil
+}
+
 type fakePusher struct {
 	pushed        []entity.PushMessage
 	invalidTokens []string
@@ -79,7 +95,7 @@ func newTestToken(token string) entity.DeviceToken {
 
 func TestRegisterToken(t *testing.T) {
 	repository := &fakeRepository{}
-	service := NewService(repository, &fakePusher{}, &fakeArticleService{})
+	service := NewService(repository, &fakeDigestLog{}, &fakePusher{}, &fakeArticleService{})
 
 	if err := service.RegisterToken("ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]", "devicehash", "ios", true); err != nil {
 		t.Fatalf("正常なトークン登録が失敗しました: %v", err)
@@ -105,7 +121,7 @@ func TestSendDailyDigest(t *testing.T) {
 	articleService := &fakeArticleService{articlesByPeriod: map[string][]entity.Article{
 		"daily": {newTestArticle("今日の1位記事")},
 	}}
-	service := NewService(repository, pusher, articleService)
+	service := NewService(repository, &fakeDigestLog{}, pusher, articleService)
 
 	sentCount, err := service.SendDailyDigest()
 	if err != nil {
@@ -138,7 +154,7 @@ func TestSendDailyDigestFallback(t *testing.T) {
 	articleService := &fakeArticleService{articlesByPeriod: map[string][]entity.Article{
 		"weekly": {newTestArticle("今週の1位記事")},
 	}}
-	service := NewService(repository, pusher, articleService)
+	service := NewService(repository, &fakeDigestLog{}, pusher, articleService)
 
 	sentCount, err := service.SendDailyDigest()
 	if err != nil {
@@ -154,10 +170,55 @@ func TestSendDailyDigestFallback(t *testing.T) {
 
 func TestSendDailyDigestNoRanking(t *testing.T) {
 	repository := &fakeRepository{tokens: []entity.DeviceToken{newTestToken("ExponentPushToken[aaa]")}}
-	service := NewService(repository, &fakePusher{}, &fakeArticleService{articlesByPeriod: map[string][]entity.Article{}})
+	service := NewService(repository, &fakeDigestLog{}, &fakePusher{}, &fakeArticleService{articlesByPeriod: map[string][]entity.Article{}})
 
 	if _, err := service.SendDailyDigest(); !errors.Is(err, entity.ErrNotFound) {
 		t.Fatalf("ランキング全滅時にErrNotFoundが返りません: %v", err)
+	}
+}
+
+func TestSendDailyDigestSkipsRecentlySent(t *testing.T) {
+	first := newTestArticle("1位の記事(送信済み)")
+	second := newTestArticle("2位の記事")
+	repository := &fakeRepository{tokens: []entity.DeviceToken{newTestToken("ExponentPushToken[aaa]")}}
+	pusher := &fakePusher{}
+	digestLog := &fakeDigestLog{recentArticleIDs: []string{first.ID.String()}}
+	articleService := &fakeArticleService{articlesByPeriod: map[string][]entity.Article{
+		"daily": {first, second},
+	}}
+	service := NewService(repository, digestLog, pusher, articleService)
+
+	if _, err := service.SendDailyDigest(); err != nil {
+		t.Fatalf("ダイジェスト送信が失敗しました: %v", err)
+	}
+	if pusher.pushed[0].Body != "2位の記事" {
+		t.Fatalf("送信済み記事が除外されていません: %s", pusher.pushed[0].Body)
+	}
+	if len(digestLog.savedArticleIDs) != 1 || digestLog.savedArticleIDs[0] != second.ID.String() {
+		t.Fatalf("送信履歴が記録されていません: %v", digestLog.savedArticleIDs)
+	}
+	if digestLog.savedSentCounts[0] != 1 {
+		t.Fatalf("送信数の記録が1ではありません: %d", digestLog.savedSentCounts[0])
+	}
+}
+
+func TestSendDailyDigestAllRecentlySentFallsBackToTop(t *testing.T) {
+	first := newTestArticle("1位の記事")
+	second := newTestArticle("2位の記事")
+	repository := &fakeRepository{tokens: []entity.DeviceToken{newTestToken("ExponentPushToken[aaa]")}}
+	pusher := &fakePusher{}
+	// 全記事が送信済み → 重複を許容して全体の1位を送る(送らないよりは良い)
+	digestLog := &fakeDigestLog{recentArticleIDs: []string{first.ID.String(), second.ID.String()}}
+	articleService := &fakeArticleService{articlesByPeriod: map[string][]entity.Article{
+		"daily": {first, second},
+	}}
+	service := NewService(repository, digestLog, pusher, articleService)
+
+	if _, err := service.SendDailyDigest(); err != nil {
+		t.Fatalf("ダイジェスト送信が失敗しました: %v", err)
+	}
+	if pusher.pushed[0].Body != "1位の記事" {
+		t.Fatalf("全除外時に1位へフォールバックしていません: %s", pusher.pushed[0].Body)
 	}
 }
 
@@ -167,7 +228,7 @@ func TestSendDailyDigestNoTokens(t *testing.T) {
 	articleService := &fakeArticleService{articlesByPeriod: map[string][]entity.Article{
 		"daily": {newTestArticle("記事")},
 	}}
-	service := NewService(repository, pusher, articleService)
+	service := NewService(repository, &fakeDigestLog{}, pusher, articleService)
 
 	sentCount, err := service.SendDailyDigest()
 	if err != nil {

@@ -11,18 +11,24 @@ import (
 // Service Service struct
 type Service struct {
 	repository     Repository
+	digestLog      DigestLogRepository
 	pusher         Pusher
 	articleService article.UseCase
 }
 
 // NewService create new service
-func NewService(r Repository, p Pusher, a article.UseCase) *Service {
+func NewService(r Repository, d DigestLogRepository, p Pusher, a article.UseCase) *Service {
 	return &Service{
 		repository:     r,
+		digestLog:      d,
 		pusher:         p,
 		articleService: a,
 	}
 }
+
+// 直近この時間内に送った記事は次回の選定から除外する。
+// 24時間だと朝夜の2枠しか外れないが、48時間なら「1位に数日居座る記事」の再送も防げる
+const digestDedupWindow = 48 * time.Hour
 
 // RegisterToken トークンの登録・設定更新(同一トークンはupsert)
 func (s *Service) RegisterToken(expoToken, deviceHash, platform string, digestEnabled bool) error {
@@ -34,9 +40,20 @@ func (s *Service) RegisterToken(expoToken, deviceHash, platform string, digestEn
 }
 
 // SendDailyDigest 人気1位の記事をダイジェスト通知として全許諾端末へ送る。
-// 朝の実行時はdailyランキングがまだ薄いため weekly → monthly へフォールバックする
+// 朝の実行時はdailyランキングがまだ薄いため weekly → monthly へフォールバックする。
+// 直近に送った記事は除外する(朝と夜で同じ記事が2回届くのを防ぐ)
 func (s *Service) SendDailyDigest() (int, error) {
-	topArticle, err := s.pickTopArticle()
+	recentArticleIDs, err := s.digestLog.ListRecentArticleIDs(time.Now().Add(-digestDedupWindow))
+	if err != nil {
+		// 履歴が読めなくても送信自体は止めない(最悪でも重複するだけ)
+		log.Warnf("ダイジェスト送信履歴の取得に失敗しました: %v", err)
+		recentArticleIDs = nil
+	}
+	exclude := make(map[string]bool, len(recentArticleIDs))
+	for _, articleID := range recentArticleIDs {
+		exclude[articleID] = true
+	}
+	topArticle, err := s.pickTopArticle(exclude)
 	if err != nil {
 		return 0, err
 	}
@@ -80,10 +97,17 @@ func (s *Service) SendDailyDigest() (int, error) {
 			log.Warnf("失効トークンの削除に失敗しました(%s): %v", invalidToken, err)
 		}
 	}
-	return len(messages) - len(invalidTokens), nil
+	sentCount := len(messages) - len(invalidTokens)
+	if err := s.digestLog.Save(topArticle.ID, sentCount); err != nil {
+		log.Warnf("ダイジェスト送信履歴の記録に失敗しました: %v", err)
+	}
+	return sentCount, nil
 }
 
-func (s *Service) pickTopArticle() (entity.Article, error) {
+// pickTopArticle 除外リストにない最上位の記事を選ぶ。
+// 全記事が除外済みの場合のみ重複を許容して全体の1位を返す(送らないよりは良い)
+func (s *Service) pickTopArticle(exclude map[string]bool) (entity.Article, error) {
+	var fallback *entity.Article
 	var lastErr error
 	for _, period := range []string{"daily", "weekly", "monthly"} {
 		articles, err := s.articleService.ListPopularArticles(period)
@@ -91,9 +115,17 @@ func (s *Service) pickTopArticle() (entity.Article, error) {
 			lastErr = err
 			continue
 		}
-		if len(articles) > 0 {
-			return articles[0], nil
+		for i := range articles {
+			if fallback == nil {
+				fallback = &articles[i]
+			}
+			if !exclude[articles[i].ID.String()] {
+				return articles[i], nil
+			}
 		}
+	}
+	if fallback != nil {
+		return *fallback, nil
 	}
 	return entity.Article{}, lastErr
 }
