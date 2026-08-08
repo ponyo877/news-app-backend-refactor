@@ -20,6 +20,7 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/usecase/article"
 	"github.com/ponyo877/news-app-backend-refactor/usecase/comment"
 	"github.com/ponyo877/news-app-backend-refactor/usecase/fileio"
+	"github.com/ponyo877/news-app-backend-refactor/usecase/notification"
 	"github.com/ponyo877/news-app-backend-refactor/usecase/site"
 	"github.com/ponyo877/news-app-backend-refactor/usecase/stock"
 	"github.com/ponyo877/news-app-backend-refactor/usecase/user"
@@ -98,6 +99,8 @@ func main() {
 	fileioService := fileio.NewService(imageRepository, appConfig.APRoot)
 	userService := user.NewService(userRepository, fileioService)
 	commentService := comment.NewService(commentRepository, userService)
+	deviceTokenRepository := repository.NewDeviceTokenMySQL(gormDB)
+	notificationService := notification.NewService(deviceTokenRepository, repository.NewPushExpo(), articleService)
 
 	cronConfig, err := config.LoadCronConfig()
 	if err != nil {
@@ -119,6 +122,7 @@ func main() {
 	handler.MakeUserHandlers(e, userService)
 	handler.MakeImageHandlers(e, fileioService)
 	handler.MakeCommentHandlers(e, commentService)
+	handler.MakeNotificationHandlers(e, notificationService, cronGuard)
 
 	e.Logger.Fatal(e.Start(":" + appConfig.APPort))
 }
