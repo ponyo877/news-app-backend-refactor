@@ -97,7 +97,8 @@ func (r *CommentMySQL) Create(e entity.Comment) (entity.ID, error) {
 		CreatedAt:  e.CreatedAt,
 	}
 	if err := r.db.Create(commentMySQLPresenter).Error; err != nil {
-		return entity.NewID(), nil
+		// 以前はerrを握り潰してDB障害時も200が返っていた(投稿が消える誤動作)
+		return entity.NewID(), err
 	}
 	return e.ID, nil
 }

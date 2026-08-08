@@ -27,16 +27,11 @@ func (s *Service) CreateArticle(article entity.Article) error {
 	return nil
 }
 
-// GetArticle get a article
+// GetArticle get a article。
+// 以前はErrNotFoundをnil+ゼロ値に握り潰していたが、着地ページ(/a/)とメタAPIが
+// 404を判定できるようそのまま返す(修正時点で他に呼び出し元なし)
 func (s *Service) GetArticle(id entity.ID) (entity.Article, error) {
-	article, err := s.repository.Get(id)
-	if err == entity.ErrNotFound {
-		return entity.Article{}, nil
-	}
-	if err != nil {
-		return entity.Article{}, err
-	}
-	return article, nil
+	return s.repository.Get(id)
 }
 
 // SearchArticles search article

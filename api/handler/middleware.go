@@ -46,6 +46,9 @@ func cacheMaxAge(path string) int {
 		return 300
 	case strings.HasPrefix(path, "/v1/article/similar/"):
 		return 3600
+	case strings.HasPrefix(path, "/v1/article/meta/"):
+		// ディープリンク着地時の単体取得。記事は不変なので長め
+		return 86400
 	case path == "/v1/site":
 		return 3600
 	}

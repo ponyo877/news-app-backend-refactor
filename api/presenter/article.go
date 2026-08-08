@@ -41,6 +41,11 @@ func pickArticle(article entity.Article) (Article, error) {
 	return articlePresenter, nil
 }
 
+// PickArticle 単体記事のpresenter変換(/v1/article/meta と /a/ 着地ページが使う)
+func PickArticle(article entity.Article) (Article, error) {
+	return pickArticle(article)
+}
+
 // PickArticleList
 func PickArticleList(articleList []entity.Article) (ArticleList, error) {
 	var articlePresenterList ArticleList

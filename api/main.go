@@ -123,6 +123,7 @@ func main() {
 	handler.MakeImageHandlers(e, fileioService)
 	handler.MakeCommentHandlers(e, commentService)
 	handler.MakeNotificationHandlers(e, notificationService, cronGuard)
+	handler.MakeLandingHandlers(e, articleService, appConfig.APRoot)
 
 	e.Logger.Fatal(e.Start(":" + appConfig.APPort))
 }

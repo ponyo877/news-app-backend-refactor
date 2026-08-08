@@ -19,6 +19,7 @@ func MakeArticleHandlers(e *echo.Echo, service article.UseCase, cronGuard echo.M
 	e.POST("/v1/article/view/:article_id", IncrementViewCount(service))
 	e.GET("/v1/article/recommend", ListRecommendArticle(service))
 	e.GET("/v1/article/similar/:article_id", ListSimilarArticle(service))
+	e.GET("/v1/article/meta/:article_id", GetArticleMeta(service))
 	// BERT索引の再構築は重い処理のため外部から起動されないよう保護する
 	e.GET("/v1/stock/mlindex", UpdateMLIndex(service), cronGuard)
 }
@@ -198,6 +199,31 @@ func ListSimilarArticle(service article.UseCase) echo.HandlerFunc {
 			Data: articleJson,
 		}
 		return c.JSON(http.StatusOK, responce)
+	}
+}
+
+// GetArticleMeta ディープリンク着地時にアプリがIDから記事メタ一式を復元するための単体取得。
+// レスポンスのキー体系は一覧API・通知dataペイロードと同一(id/titles/url/image/...)
+func GetArticleMeta(service article.UseCase) echo.HandlerFunc {
+	return func(c echo.Context) error {
+		articleID, err := entity.StringToID(c.Param("article_id"))
+		if err != nil {
+			return c.JSON(http.StatusNotFound, nil)
+		}
+		foundArticle, err := service.GetArticle(articleID)
+		if err == entity.ErrNotFound {
+			return c.JSON(http.StatusNotFound, nil)
+		}
+		if err != nil {
+			log.Infof("サービスGetArticleが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		articleJson, err := presenter.PickArticle(foundArticle)
+		if err != nil {
+			log.Infof("PickArticleが失敗しました: %v", err)
+			return c.JSON(http.StatusBadRequest, nil)
+		}
+		return c.JSON(http.StatusOK, articleJson)
 	}
 }
 
