@@ -23,3 +23,4 @@ scripts/seed-sites/insert-sites.sql
 # ローカル成果物・素材(コミットしない)
 /seed-sites
 *.mov
+.DS_Store
