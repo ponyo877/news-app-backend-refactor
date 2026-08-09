@@ -15,12 +15,13 @@ type DeviceTokenMySQL struct {
 }
 
 type DeviceTokenMySQLPresenter struct {
-	ExpoToken     string    `gorm:"column:expo_token;primary_key"`
-	DeviceHash    string    `gorm:"column:device_hash"`
-	Platform      string    `gorm:"column:platform"`
-	DigestEnabled bool      `gorm:"column:digest_enabled"`
-	UpdatedAt     time.Time `gorm:"column:updated_at"`
-	CreatedAt     time.Time `gorm:"column:created_at"`
+	ExpoToken      string    `gorm:"column:expo_token;primary_key"`
+	DeviceHash     string    `gorm:"column:device_hash"`
+	Platform       string    `gorm:"column:platform"`
+	DigestEnabled  bool      `gorm:"column:digest_enabled"`
+	MatsuriEnabled bool      `gorm:"column:matsuri_enabled"`
+	UpdatedAt      time.Time `gorm:"column:updated_at"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
 }
 
 // TableName
@@ -38,24 +39,34 @@ func NewDeviceTokenMySQL(db *gorm.DB) *DeviceTokenMySQL {
 // Save トークンを登録・更新する(同一トークンの再登録は設定の上書き)
 func (r *DeviceTokenMySQL) Save(e entity.DeviceToken) error {
 	presenter := DeviceTokenMySQLPresenter{
-		ExpoToken:     e.ExpoToken,
-		DeviceHash:    e.DeviceHash,
-		Platform:      e.Platform,
-		DigestEnabled: e.DigestEnabled,
-		UpdatedAt:     e.UpdatedAt,
-		CreatedAt:     e.CreatedAt,
+		ExpoToken:      e.ExpoToken,
+		DeviceHash:     e.DeviceHash,
+		Platform:       e.Platform,
+		DigestEnabled:  e.DigestEnabled,
+		MatsuriEnabled: e.MatsuriEnabled,
+		UpdatedAt:      e.UpdatedAt,
+		CreatedAt:      e.CreatedAt,
 	}
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "expo_token"}},
-		DoUpdates: clause.AssignmentColumns([]string{"device_hash", "platform", "digest_enabled", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"device_hash", "platform", "digest_enabled", "matsuri_enabled", "updated_at"}),
 	}).Create(&presenter).Error
 }
 
 // ListDigestEnabled ダイジェスト通知ONのトークン一覧
 func (r *DeviceTokenMySQL) ListDigestEnabled() ([]entity.DeviceToken, error) {
+	return r.listEnabled("digest_enabled")
+}
+
+// ListMatsuriEnabled 祭り速報ONのトークン一覧
+func (r *DeviceTokenMySQL) ListMatsuriEnabled() ([]entity.DeviceToken, error) {
+	return r.listEnabled("matsuri_enabled")
+}
+
+func (r *DeviceTokenMySQL) listEnabled(column string) ([]entity.DeviceToken, error) {
 	var presenterList []DeviceTokenMySQLPresenter
 	if err := r.db.
-		Where("digest_enabled = ?", true).
+		Where(column+" = ?", true).
 		Find(&presenterList).
 		Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
@@ -63,12 +74,13 @@ func (r *DeviceTokenMySQL) ListDigestEnabled() ([]entity.DeviceToken, error) {
 	var deviceTokenList []entity.DeviceToken
 	for _, presenter := range presenterList {
 		deviceTokenList = append(deviceTokenList, entity.DeviceToken{
-			ExpoToken:     presenter.ExpoToken,
-			DeviceHash:    presenter.DeviceHash,
-			Platform:      presenter.Platform,
-			DigestEnabled: presenter.DigestEnabled,
-			UpdatedAt:     presenter.UpdatedAt,
-			CreatedAt:     presenter.CreatedAt,
+			ExpoToken:      presenter.ExpoToken,
+			DeviceHash:     presenter.DeviceHash,
+			Platform:       presenter.Platform,
+			DigestEnabled:  presenter.DigestEnabled,
+			MatsuriEnabled: presenter.MatsuriEnabled,
+			UpdatedAt:      presenter.UpdatedAt,
+			CreatedAt:      presenter.CreatedAt,
 		})
 	}
 	return deviceTokenList, nil

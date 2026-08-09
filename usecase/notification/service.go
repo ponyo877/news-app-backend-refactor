@@ -1,6 +1,7 @@
 package notification
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/labstack/gommon/log"
@@ -31,12 +32,53 @@ func NewService(r Repository, d DigestLogRepository, p Pusher, a article.UseCase
 const digestDedupWindow = 48 * time.Hour
 
 // RegisterToken トークンの登録・設定更新(同一トークンはupsert)
-func (s *Service) RegisterToken(expoToken, deviceHash, platform string, digestEnabled bool) error {
-	deviceToken, err := entity.NewDeviceToken(expoToken, deviceHash, platform, digestEnabled)
+func (s *Service) RegisterToken(expoToken, deviceHash, platform string, digestEnabled, matsuriEnabled bool) error {
+	deviceToken, err := entity.NewDeviceToken(expoToken, deviceHash, platform, digestEnabled, matsuriEnabled)
 	if err != nil {
 		return err
 	}
 	return s.repository.Save(deviceToken)
+}
+
+// SendMatsuri 祭り速報(複数サイトが同一スレを一斉にまとめた)を許諾端末へ送る。
+// 記事メタは検知元(Cloudflare Worker)から渡され、頻度制御もWorker側で実施済み
+func (s *Service) SendMatsuri(article entity.Article, imageURL string, siteCount int) (int, error) {
+	deviceTokenList, err := s.repository.ListMatsuriEnabled()
+	if err != nil {
+		return 0, err
+	}
+	if len(deviceTokenList) == 0 {
+		return 0, nil
+	}
+	data := map[string]string{
+		"type":        "matsuri",
+		"id":          article.ID.String(),
+		"titles":      article.Title.String(),
+		"url":         article.URL,
+		"image":       imageURL,
+		"siteID":      article.Site.ID.String(),
+		"sitetitle":   article.Site.Title,
+		"publishedAt": article.PublishedAt.Format(time.RFC3339),
+	}
+	messages := make([]entity.PushMessage, 0, len(deviceTokenList))
+	for _, deviceToken := range deviceTokenList {
+		messages = append(messages, entity.PushMessage{
+			To:    deviceToken.ExpoToken,
+			Title: fmt.Sprintf("🔥 %dサイトが一斉にまとめ中", siteCount),
+			Body:  article.Title.String(),
+			Data:  data,
+		})
+	}
+	invalidTokens, err := s.pusher.Push(messages)
+	if err != nil {
+		return 0, err
+	}
+	for _, invalidToken := range invalidTokens {
+		if err := s.repository.Delete(invalidToken); err != nil {
+			log.Warnf("失効トークンの削除に失敗しました(%s): %v", invalidToken, err)
+		}
+	}
+	return len(messages) - len(invalidTokens), nil
 }
 
 // SendDailyDigest 人気1位の記事をダイジェスト通知として全許諾端末へ送る。

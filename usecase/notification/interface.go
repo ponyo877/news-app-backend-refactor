@@ -10,6 +10,7 @@ import (
 type Repository interface {
 	Save(e entity.DeviceToken) error
 	ListDigestEnabled() ([]entity.DeviceToken, error)
+	ListMatsuriEnabled() ([]entity.DeviceToken, error)
 	Delete(expoToken string) error
 }
 
@@ -26,6 +27,7 @@ type Pusher interface {
 
 // UseCase interface
 type UseCase interface {
-	RegisterToken(expoToken, deviceHash, platform string, digestEnabled bool) error
+	RegisterToken(expoToken, deviceHash, platform string, digestEnabled, matsuriEnabled bool) error
 	SendDailyDigest() (int, error)
+	SendMatsuri(article entity.Article, imageURL string, siteCount int) (int, error)
 }

@@ -7,23 +7,25 @@ import (
 
 // DeviceToken プッシュ通知の送信先(Expo Push Token)
 type DeviceToken struct {
-	ExpoToken     string
-	DeviceHash    string
-	Platform      string
-	DigestEnabled bool
-	UpdatedAt     time.Time
-	CreatedAt     time.Time
+	ExpoToken      string
+	DeviceHash     string
+	Platform       string
+	DigestEnabled  bool
+	MatsuriEnabled bool
+	UpdatedAt      time.Time
+	CreatedAt      time.Time
 }
 
 // NewDeviceToken create a new device token
-func NewDeviceToken(expoToken, deviceHash, platform string, digestEnabled bool) (DeviceToken, error) {
+func NewDeviceToken(expoToken, deviceHash, platform string, digestEnabled, matsuriEnabled bool) (DeviceToken, error) {
 	deviceToken := DeviceToken{
-		ExpoToken:     expoToken,
-		DeviceHash:    deviceHash,
-		Platform:      platform,
-		DigestEnabled: digestEnabled,
-		UpdatedAt:     time.Now(),
-		CreatedAt:     time.Now(),
+		ExpoToken:      expoToken,
+		DeviceHash:     deviceHash,
+		Platform:       platform,
+		DigestEnabled:  digestEnabled,
+		MatsuriEnabled: matsuriEnabled,
+		UpdatedAt:      time.Now(),
+		CreatedAt:      time.Now(),
 	}
 	if err := deviceToken.Validate(); err != nil {
 		return DeviceToken{}, ErrInvalidEntity

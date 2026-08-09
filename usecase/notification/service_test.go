@@ -23,6 +23,10 @@ func (f *fakeRepository) ListDigestEnabled() ([]entity.DeviceToken, error) {
 	return f.tokens, nil
 }
 
+func (f *fakeRepository) ListMatsuriEnabled() ([]entity.DeviceToken, error) {
+	return f.tokens, nil
+}
+
 func (f *fakeRepository) Delete(expoToken string) error {
 	f.deleted = append(f.deleted, expoToken)
 	return nil
@@ -97,17 +101,17 @@ func TestRegisterToken(t *testing.T) {
 	repository := &fakeRepository{}
 	service := NewService(repository, &fakeDigestLog{}, &fakePusher{}, &fakeArticleService{})
 
-	if err := service.RegisterToken("ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]", "devicehash", "ios", true); err != nil {
+	if err := service.RegisterToken("ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]", "devicehash", "ios", true, true); err != nil {
 		t.Fatalf("正常なトークン登録が失敗しました: %v", err)
 	}
 	if len(repository.saved) != 1 {
 		t.Fatalf("保存件数が1ではありません: %d", len(repository.saved))
 	}
 
-	if err := service.RegisterToken("bogus-token", "devicehash", "ios", true); err == nil {
+	if err := service.RegisterToken("bogus-token", "devicehash", "ios", true, true); err == nil {
 		t.Fatal("不正な形式のトークンが登録できてしまいました")
 	}
-	if err := service.RegisterToken("ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]", "devicehash", "web", true); err == nil {
+	if err := service.RegisterToken("ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]", "devicehash", "web", true, true); err == nil {
 		t.Fatal("不正なプラットフォームが登録できてしまいました")
 	}
 }
@@ -236,5 +240,32 @@ func TestSendDailyDigestNoTokens(t *testing.T) {
 	}
 	if sentCount != 0 || len(pusher.pushed) != 0 {
 		t.Fatal("トークン0件なのに送信されています")
+	}
+}
+
+func TestSendMatsuri(t *testing.T) {
+	repository := &fakeRepository{tokens: []entity.DeviceToken{
+		newTestToken("ExponentPushToken[aaa]"),
+		newTestToken("ExponentPushToken[bbb]"),
+	}}
+	pusher := &fakePusher{}
+	service := NewService(repository, &fakeDigestLog{}, pusher, &fakeArticleService{})
+
+	matsuriArticle := newTestArticle("祭りの記事")
+	sentCount, err := service.SendMatsuri(matsuriArticle, "https://example.com/i.jpg", 4)
+	if err != nil {
+		t.Fatalf("祭り速報の送信が失敗しました: %v", err)
+	}
+	if sentCount != 2 {
+		t.Fatalf("送信成功数が2ではありません: %d", sentCount)
+	}
+	if pusher.pushed[0].Title != "🔥 4サイトが一斉にまとめ中" {
+		t.Fatalf("通知タイトルが想定と異なります: %s", pusher.pushed[0].Title)
+	}
+	if pusher.pushed[0].Data["type"] != "matsuri" {
+		t.Fatal("通知データにtype=matsuriがありません")
+	}
+	if pusher.pushed[0].Data["id"] == "" {
+		t.Fatal("通知データに記事IDがありません")
 	}
 }
