@@ -10,6 +10,12 @@ import (
 	"github.com/ponyo877/news-app-backend-refactor/entity"
 )
 
+// ランキング(日間・週間・月間)の取得件数。
+// Listが1件ずつGetするためそのままDBクエリ数になるが、/v1/article/view/popular/* は
+// エッジで300秒キャッシュされるためオリジンへの負荷は限定的。
+// 削除済み記事はListでスキップされるので、実際の応答はこれより少なくなることがある
+const popularRankingSize = 30
+
 // IncrementViewCount
 func (r *ArticleRepository) IncrementViewCount(ID entity.ID) error {
 	periodList := []string{"monthly", "weekly", "daily"}
@@ -32,7 +38,7 @@ func (r *ArticleRepository) ListOnlyIDOrderByViewCount(period string) ([]entity.
 	if err != nil {
 		return nil, err
 	}
-	serializedMembersWithScores, err := r.kvs.ZRevRangeWithScores(context.Background(), zSetKey, 0, 14).Result()
+	serializedMembersWithScores, err := r.kvs.ZRevRangeWithScores(context.Background(), zSetKey, 0, popularRankingSize-1).Result()
 	for _, serializedMemberWithScore := range serializedMembersWithScores {
 		serializedMember := serializedMemberWithScore.Member
 		IDString, ok := serializedMember.(string)
