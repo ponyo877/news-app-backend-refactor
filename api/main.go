@@ -124,6 +124,7 @@ func main() {
 	handler.MakeCommentHandlers(e, commentService)
 	handler.MakeNotificationHandlers(e, notificationService, cronGuard)
 	handler.MakeLandingHandlers(e, articleService, appConfig.APRoot)
+	handler.MakeAppAdsHandlers(e)
 
 	e.Logger.Fatal(e.Start(":" + appConfig.APPort))
 }
